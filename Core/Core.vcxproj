@@ -56,14 +56,14 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\source;C:\Program Files %28x86%29\Vulkan\1.1.121.0\Include;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\vendor\glm;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\vendor\glfw-3.3.bin.WIN64\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\source;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\vendor\Vulkan\Include;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\vendor\glm;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\vendor\glfw-3.3.bin.WIN64\include</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>C:\Program Files %28x86%29\Vulkan\1.1.121.0\Lib;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\vendor\glfw-3.3.bin.WIN64\lib-vc2019;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\vendor\Vulkan\Lib;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\vendor\glfw-3.3.bin.WIN64\lib-vc2019;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
