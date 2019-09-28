@@ -1,6 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\Core",
+    "\\Core\\source",
+    "\\Core\\source\\VulkanCore"
   ],
+  "SelectedNode": "\\Core\\source\\VulkanCore\\main.cpp",
   "PreviewInSolutionExplorer": false
 }
