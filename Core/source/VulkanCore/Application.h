@@ -11,19 +11,29 @@
 
 // GLFW Header files and Libraries
 #include <GLFW/glfw3.h>
+// GLM files
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
-//GLFW Defines
+// GLFW Defines
 #define GLFW_INCLUDE_VULKAN
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_ZERO_TO_ONE
 
 #pragma endregion
 
-/* Information about the progress I have made
-*
-*
-*/
+const int WindowWidth = 1280;
+const int WindowHeight = 720;
+
+const std::vector<const char*> validationLayers = {
+	"VK_LAYER_KRONOS_validation"
+};
+
+#ifdef NDEBUG
+const bool enableValidationLayer = false;
+#else
+const bool enableValidationLayer = true;
+#endif
+
 class MainApplication
 {
 public:
@@ -35,8 +45,6 @@ public:
 	}
 
 private:
-	const int WindowWidth = 1280;
-	const int WindowHeight = 720;
 	// Instance of GLFW window.
 	GLFWwindow* window;
 	// Vulkan instance
@@ -52,7 +60,7 @@ private:
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 		// Create a window with GLFW.
-		window = glfwCreateWindow(WindowWidth, WindowHeight, "VulkanWindow", nullptr, nullptr);
+		window = glfwCreateWindow(WindowWidth, WindowHeight, "Game Window", nullptr, nullptr);
 	}
 	void initVulkan() {
 		createInstance();
@@ -63,17 +71,27 @@ private:
 		}
 	}
 	void cleanUp() {
+		// Destroy the Vulkan instance
+		vkDestroyInstance(VulkanInstance, nullptr);
+
 		// Destroy the Window we created
 		glfwDestroyWindow(window);
+
 		// Terminate the GLFW instance completely including all memory.
 		glfwTerminate();
 	}
+
 	// information about the Vulkan Application.
 	void createInstance() {
+
+		if (enableValidationLayer && !checkValidationLayerSupport()) {
+			throw std::runtime_error("validation layers requested, but not available!");
+		}
+
 		// App Info
 		VkApplicationInfo appinfo = {};
 		appinfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appinfo.pApplicationName = "Vulkan API Engine";
+		appinfo.pApplicationName = "Cold Galaxy Game";
 		appinfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 		appinfo.pEngineName = "Cold Galaxy Engine";
 		appinfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -83,16 +101,84 @@ private:
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		createInfo.pApplicationInfo = &appinfo;
 
-		uint32_t glfwExtensionCount = 0;
-		const char** glfwExtensions;
+		auto extensions = getRequiredExtensions();
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+		createInfo.ppEnabledExtensionNames = extensions.data();
 
-		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-		createInfo.enabledExtensionCount = glfwExtensionCount;
-		createInfo.ppEnabledExtensionNames = glfwExtensions;
-
-		createInfo.enabledLayerCount = 0;
+		//createInfo.enabledLayerCount = 0;
 
 		VkResult result = vkCreateInstance(&createInfo, nullptr, &VulkanInstance);
+		
+
+		if (vkCreateInstance(&createInfo, nullptr, &VulkanInstance) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create instance of Vulkan.");
+		}
+		
+		// More cool code
+
+		if (vkCreateInstance(&createInfo, nullptr, &VulkanInstance) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create instance!");
+		}
+
+		/*
+		uint32_t extensionCount = 0;
+		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+
+		std::vector<VkExtensionProperties> v_extensions(extensionCount);
+
+		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, v_extensions.data());
+
+		std::cout << "available extensions: " << std::endl;
+
+		for (const auto extension : v_extensions)
+		{
+			std::cout << "\t" << extension.extensionName << std::endl;
+		}
+		*/
+	}
+
+	std::vector<const char*> getRequiredExtensions()
+	{
+		uint32_t glfwExtensionCount = 0;
+		const char** glfwExtensions;
+		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+		std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+		if (enableValidationLayer) {
+			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		}
+
+		return extensions;
+	}
+
+	bool checkValidationLayerSupport()
+	{
+		uint32_t layerCount;
+		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+		std::vector<VkLayerProperties> availableLayers(layerCount);
+		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+		for (const char* layerName : validationLayers)
+		{
+			bool layerFound = false;
+
+			for (const auto& layerProperties : availableLayers) {
+				if (strcmp(layerName, layerProperties.layerName) == 0) {
+					layerFound = true;
+					break;
+				}
+			}
+
+			if (!layerFound) {
+				// Return false if no layers can be found.
+				return false;
+			}
+
+			// Return true if atleast 1 layer can be found.
+			return true;
+		}
 	}
 };
