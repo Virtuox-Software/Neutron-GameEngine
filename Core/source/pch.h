@@ -8,4 +8,7 @@
 #include <cstring>
 #include <vector>
 
+#include <stdexcept>
+#include <cstdlib>
+
 typedef float floot;
