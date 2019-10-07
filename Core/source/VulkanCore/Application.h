@@ -1,17 +1,29 @@
-#pragma once
+/* Links to References and Information sources.
+ * 
+ * All the Files with Code in the tutorial: 
+ * https://github.com/Overv/VulkanTutorial/tree/master/code
+ * 
+ * Online Tutorial Website for Vulkan.
+ * https://vulkan-tutorial.com/Introduction
+ * 
+*/
 
+#pragma once
 #pragma region Headers and Libraries
-// Precompiled header
+
+// Pre Compiled Header.
 #include <pch.h>
-// Vulkan Header files and Libraries
+// Vulkan Header files and Libraries.
 #include <vulkan/vulkan.h>
 
-// GLFW Header files and Libraries
+// Include Librarys for this File specificaly.
+
+// GLFW Header files and Libraries.
 #include <GLFW/glfw3.h>
-// GLM files
+// GLM files.
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
-// GLFW Defines
+// GLFW Defines.
 #define GLFW_INCLUDE_VULKAN
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_ZERO_TO_ONE
@@ -45,7 +57,7 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
 	}
 }
 
-void CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
 {
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 	if (func != nullptr)
@@ -53,6 +65,14 @@ void CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT 
 		return func(instance, debugMessenger, pAllocator);
 	}
 }
+
+struct QueueFamilyIndices {
+	std::optional<uint32_t> graphicsFamily;
+
+	bool isComplete() {
+		return graphicsFamily.has_value();
+	}
+};
 
 class MainApplication
 {
@@ -71,6 +91,12 @@ private:
 	VkInstance VulkanInstance;
 	VkDebugUtilsMessengerEXT debugMessenger;
 
+	// The Selected Physical Device(GPU).
+	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+	VkDevice device;
+
+	VkQueue graphicsQueue;
+
 	// Functions to run a window
 	void initWindow() {
 		// Initialize GLFW.
@@ -81,10 +107,13 @@ private:
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 		// Create a window with GLFW.
-		window = glfwCreateWindow(WindowWidth, WindowHeight, "Game Window", nullptr, nullptr);
+		window = glfwCreateWindow(WindowWidth, WindowHeight, "Vulkan Game Window", nullptr, nullptr);
 	}
 	void initVulkan() {
 		createInstance();
+		setupDebugMessenger();
+		pickPhysicalDevice();
+		createLogicalDevice();
 	}
 	void mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
@@ -92,6 +121,14 @@ private:
 		}
 	}
 	void cleanUp() {
+		// Destroy the VkDevice Instance.
+		vkDestroyDevice(device, nullptr);
+
+		// Destroy Debug Utils Messenger if Validation Layers are enabled.
+		if (enableValidationLayer) {
+			DestroyDebugUtilsMessengerEXT(VulkanInstance, debugMessenger, nullptr);
+		}
+
 		// Destroy the Vulkan instance
 		vkDestroyInstance(VulkanInstance, nullptr);
 
@@ -143,10 +180,11 @@ private:
 		}
 
 		if (vkCreateInstance(&createInfo, nullptr, &VulkanInstance) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create instance!");
+			throw std::runtime_error("Failed to create instance!");
 		}
 	}
 
+	// Set Debug Messenger types and Severitys.
 	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
 	{
 		createInfo = {};
@@ -158,6 +196,7 @@ private:
 		createInfo.pfnUserCallback = debugCallback;
 	}
 
+	// Setup a Debug messenger to check if Vulkan has ran properly.
 	void setupDebugMessenger()
 	{
 		if (!enableValidationLayer) return;
@@ -166,8 +205,95 @@ private:
 		populateDebugMessengerCreateInfo(createInfo);
 
 		if (CreateDebugUtilsMessengerEXT(VulkanInstance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
-			throw std::runtime_error("failed to set up debug messenger.");
+			throw std::runtime_error("Failed to set up debug messenger.");
 		}
+	}
+
+	// Choose a GPU that supports Vulkan and use that to run the program on.
+	void pickPhysicalDevice()
+	{
+		uint32_t deviceCount = 0;
+		vkEnumeratePhysicalDevices(VulkanInstance, &deviceCount, nullptr);
+
+		if (deviceCount == 0) {
+			throw std::runtime_error("Failed to find GPUs with Vulkan Support!");
+		}
+
+		std::vector<VkPhysicalDevice> devices(deviceCount);
+		vkEnumeratePhysicalDevices(VulkanInstance, &deviceCount, devices.data());
+
+		for (const auto& device : devices)
+		{
+			if (isDeviceSuitable(device)) {
+				physicalDevice = device;
+				break;
+			}
+		}
+
+		if (physicalDevice == VK_NULL_HANDLE) {
+			throw std::runtime_error("Failed to find a suitable GPU!");
+		}
+	}
+
+	void createLogicalDevice()
+	{
+		QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+		// set the queueCreateInfo Information.
+		VkDeviceQueueCreateInfo queueCreateInfo = {};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+		queueCreateInfo.queueCount = 1;
+
+		float queuePriority = 1.0f;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+
+		VkPhysicalDeviceFeatures deviceFeature = {};
+
+		// set the CreateInfo information.
+		VkDeviceCreateInfo createInfo = {};
+		createInfo.pQueueCreateInfos = &queueCreateInfo;
+		createInfo.queueCreateInfoCount = 1;
+
+		createInfo.pEnabledFeatures = &deviceFeature;
+
+
+	}
+
+	// Check if the chosen device is suitable for Vulkan.
+	bool isDeviceSuitable(VkPhysicalDevice device) {
+		return true;
+	}
+
+	// Find Queue Families indices.
+	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+		// The indices of QueueFamily.
+		QueueFamilyIndices indices;
+
+		uint32_t queueFamilyCount = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+		// array of Vulkan Queue Family properties
+		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+		int i = 0;
+		for (const auto& queueFamily : queueFamilies)
+		{
+			if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+				indices.graphicsFamily = i;
+			}
+
+			// If indices is complete break the for loop to continue and return indices.
+			if (indices.isComplete()) {
+				break;
+			}
+
+			i++;
+		}
+
+		// Return the indices
+		return indices;
 	}
 
 	std::vector<const char*> getRequiredExtensions()

@@ -3,16 +3,19 @@
 
 int main()
 {
-	MainApplication application;
+	MainApplication app;
 
 	try {
-		application.run();
+		app.run();
 	}
-	catch (const std::exception & e) {
+	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		// Return FAILURE if the program gets an error.
 		return EXIT_FAILURE;
 	}
+
+	std::cin.get();
+
 	// Return SUCCES if the program can run.
 	return EXIT_SUCCESS;
 }

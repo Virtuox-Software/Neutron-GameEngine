@@ -31,5 +31,8 @@
     <ClInclude Include="source\VulkanCore\Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="source\VulkanCore\BackUp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
