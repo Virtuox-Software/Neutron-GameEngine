@@ -422,6 +422,8 @@ private:
 		scissor.offset = { 0, 0 };
 		scissor.extent = swapChainExtent;
 
+		// TODO... From page 108 and more.
+
 		vkDestroyShaderModule(device, fragShaderModule, nullptr);
 		vkDestroyShaderModule(device, vertShaderModule, nullptr);
 	}
