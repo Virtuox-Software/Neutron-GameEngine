@@ -5,6 +5,6 @@
     "\\Core\\source",
     "\\Core\\source\\VulkanCore"
   ],
-  "SelectedNode": "\\Core\\source\\VulkanCore\\main.cpp",
+  "SelectedNode": "\\Core\\source\\VulkanCore\\Application.h",
   "PreviewInSolutionExplorer": false
 }

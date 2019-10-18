@@ -1,39 +1,16 @@
 #pragma once
 
-/*
-#include <sstream>
+// Include Directories and Libraries
 #include <iostream>
-#include <functional>
-#include <optional>
-#include <vector>
-#include <algorithm>
-
-#include <string>
-#include <cstring>
-
+#include <fstream>
 #include <stdexcept>
-#include <cstdlib>
-#include <cstdint>
-
-#include <map>
-#include <set>
-*/
-
-#include <iostream>
-#include <optional>
-#include <vector>
 #include <algorithm>
-
-#include <stdexcept>
-
+#include <vector>
 #include <cstring>
 #include <cstdlib>
 #include <cstdint>
-
+#include <optional>
 #include <set>
-
-// Define floot(Spoken as 'floet') as float.
-typedef float floot;
 
 #pragma region Simple Functionality
 	#if true

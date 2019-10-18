@@ -49,6 +49,9 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>gpch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Game\source;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\source\VulkanCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -62,6 +65,9 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>gpch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Game\source;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\source\VulkanCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -70,6 +76,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\gpch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="source\Scripts\Game.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\gpch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
