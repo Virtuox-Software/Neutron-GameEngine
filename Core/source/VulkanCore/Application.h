@@ -94,14 +94,16 @@ private:
 	std::vector<VkImage> swapChainImages;
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
+	std::vector<VkImageView> swapChainImageViews;
+	std::vector<VkFramebuffer> swapChainFramebuffers;
+	std::vector<VkCommandBuffer> commandBuffers;
 
 	VkRenderPass renderPass;
 	VkPipelineLayout pipelineLayout;
+	VkPipeline graphicsPipeline;
 
-	// Image view
-	std::vector<VkImageView> swapChainImageViews;
+	VkCommandPool commandPool;
 
-	VkPipelineLayout pipeLineLayout;
 
 	void initWindow() {
 		glfwInit();
@@ -113,15 +115,22 @@ private:
 	}
 
 	void initVulkan() {
+		// Creating a Window
 		createInstance();
 		setupDebugMessenger();
 		createSurface();
+		// Pick valid GPU and create devices.
 		pickPhysicalDevice();
 		createLogicalDevice();
 		createSwapChain();
+		// Create Image view and render pass to render something on screen
 		createImageView();
 		createRenderPass();
 		createGraphicPipeline();
+		createFrameBuffers();
+		// Command pool for drawing on the Window.
+		createCommandPool();
+		createCommandBuffers();
 	}
 
 	void mainLoop() {
@@ -131,13 +140,25 @@ private:
 	}
 
 	void cleanup() {
+		// Clean up the Command pool that has processed the commands to draw in the Window.
+		vkDestroyCommandPool(device, commandPool, nullptr);
+		
+		// Clean up the frame buffers
+		for (auto framebuffer : swapChainFramebuffers) {
+			vkDestroyFramebuffer(device, framebuffer, nullptr);
+		}
+
+		// Clean up the Pipeline we created to be able to render on the Window
+		vkDestroyPipeline(device, graphicsPipeline, nullptr);
 		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 		vkDestroyRenderPass(device, renderPass, nullptr);
 
+		// Clean up the image views
 		for (auto imageViews : swapChainImageViews) {
 			vkDestroyImageView(device, imageViews, nullptr);
 		}
 
+		// Clean up the Swap Chain we created for each frame to be able to get rendered and swapped.
 		vkDestroySwapchainKHR(device, swapChain, nullptr);
 		vkDestroyDevice(device, nullptr);
 
@@ -145,11 +166,14 @@ private:
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
 
+		// Clean up the Surface we create to be able to anything in the Window.
 		vkDestroySurfaceKHR(instance, surface, nullptr);
 		vkDestroyInstance(instance, nullptr);
 
+		// Clean up the GLFW Window we created
 		glfwDestroyWindow(window);
 
+		// Complete the termination of Cleaning up all of our instances.
 		glfwTerminate();
 	}
 
@@ -542,8 +566,78 @@ private:
 			throw std::runtime_error("Failed to create pipeline layout!");
 		}
 
+		VkGraphicsPipelineCreateInfo pipelineInfo = {};
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipelineInfo.stageCount = 2;
+        pipelineInfo.pStages = shaderStages;
+        pipelineInfo.pVertexInputState = &vertexInputInfo;
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pViewportState = &viewportState;
+        pipelineInfo.pRasterizationState = &rasterizer;
+        pipelineInfo.pMultisampleState = &multisampling;
+		pipelineInfo.pColorBlendState = &colorBlending;
+        pipelineInfo.layout = pipelineLayout;
+        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.subpass = 0;
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+		if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, 
+		&pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to create graphics pipeline!");
+		}
+
 		vkDestroyShaderModule(device, fragShaderModule, nullptr);
 		vkDestroyShaderModule(device, vertShaderModule, nullptr);
+	}
+
+	void createFrameBuffers() {
+		swapChainFramebuffers.resize(swapChainImageViews.size());
+
+		for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+			VkImageView attachments[] = { 
+				swapChainImageViews[i] 
+			};
+
+			VkFramebufferCreateInfo framebufferInfo = {};
+			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			framebufferInfo.renderPass = renderPass;
+			framebufferInfo.attachmentCount = 1;
+			framebufferInfo.pAttachments = attachments;
+			framebufferInfo.width = swapChainExtent.width;
+			framebufferInfo.height = swapChainExtent.height;
+			framebufferInfo.layers = 1;
+
+			if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
+				throw std::runtime_error("Failed to create frame buffers!");
+			}
+		}
+	}
+
+	void createCommandPool() {
+		QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
+
+		VkCommandPoolCreateInfo poolInfo = {};
+		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+		//poolInfo.flags = 0; // Optional
+
+		if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to create command pool!");
+		}
+	}
+
+	void createCommandBuffers() {
+		commandBuffers.resize(swapChainFramebuffers.size());
+
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType - VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = commandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
+
+		if (vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to allocate command buffers!");
+		}
 	}
 
 	VkShaderModule createShaderModule(const std::vector<char>& code) {

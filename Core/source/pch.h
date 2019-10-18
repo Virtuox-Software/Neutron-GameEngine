@@ -13,7 +13,7 @@
 #include <set>
 
 #pragma region Simple Functionality
-	#if true
+	#if false
 	///<summary>Prevent the user from closing the console automaticaly. Press Enter to Exit.</summary>
 	#define DontCloseConsole std::cout << "Press Enter to Exit the program!" << std::endl; std::cin.get();
 	#else
