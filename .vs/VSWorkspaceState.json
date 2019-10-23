@@ -1,10 +1,6 @@
 {
   "ExpandedNodes": [
-    "",
-    "\\Core",
-    "\\Core\\source",
-    "\\Core\\source\\VulkanCore"
+    ""
   ],
-  "SelectedNode": "\\Core\\source\\VulkanCore\\Application.h",
   "PreviewInSolutionExplorer": false
 }

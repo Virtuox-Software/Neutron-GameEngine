@@ -3,12 +3,12 @@
 
 int main()
 {
-	MainApplication app;
+	MainApplication EngineApplication;
 
 	try {
-		app.run();
+		EngineApplication.run();
 	}
-	catch (const std::exception& e) {
+	catch (const std::exception & e) {
 		std::cerr << e.what() << std::endl;
 		// Return FAILURE if the program gets an error.
 

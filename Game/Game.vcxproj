@@ -51,7 +51,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>gpch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Game\source;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\source\VulkanCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core\vendor\spdlog\include;$(SolutionDir)Game\source;$(SolutionDir)Core\source\Game;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -67,7 +67,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>gpch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Game\source;C:\Users\Rink\source\repos\VulkanAPI-VerdiepingSoftware\Core\source\VulkanCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core\vendor\spdlog\include;$(SolutionDir)Game\source;$(SolutionDir)Core\source\Game;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
