@@ -23,6 +23,9 @@
     <ClCompile Include="source\Client\AppLog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\Game\Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\pch.h">
@@ -31,22 +34,25 @@
     <ClInclude Include="source\VulkanCore\Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="source\VulkanCore\BackUp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="source\EntryPoint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="source\VulkanCore\EntryPoint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Game\Engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="source\VulkanCore\CoreLog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="source\Client\AppLog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\VulkanCore\Core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\VulkanCore\GameRunner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\VulkanCore\EntryPoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Game\Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

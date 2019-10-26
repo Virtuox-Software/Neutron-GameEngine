@@ -6,5 +6,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\gpch.h" />
+    <ClInclude Include="source\Scripts\Game.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

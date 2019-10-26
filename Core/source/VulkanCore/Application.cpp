@@ -1,5 +1,8 @@
 #include <pch.h>
+#include "CoreLog.h"
 #include "Application.h"
+
+using namespace GalaxyCloudEngine;
 
 int main()
 {
@@ -22,4 +25,9 @@ int main()
 
 	// Return SUCCES if the program can run.
 	return EXIT_SUCCESS;
+}
+
+void MainApplication::Game()
+{
+	std::cout << "Banaan" << std::endl;
 }

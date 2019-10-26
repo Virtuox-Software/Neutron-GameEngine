@@ -2,7 +2,7 @@
 #include "AppLog.h"
 #include "spdlog/sinks/stdout_color_sinks.h" 
 
-namespace VulkanCore
+namespace GalaxyCloudEngine
 {
 	std::shared_ptr<spdlog::logger> Log::s_ClientLogger;
 

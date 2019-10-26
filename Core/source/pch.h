@@ -12,6 +12,8 @@
 #include <optional>
 #include <set>
 
+#include "VulkanCore/CoreLog.h"
+
 #pragma region Simple Functionality
 	#if false
 	///<summary>Prevent the user from closing the console automaticaly. Press Enter to Exit.</summary>
@@ -23,4 +25,5 @@
 	///</summary>
 	#define DontCloseConsole
 	#endif
+
 #pragma endregion

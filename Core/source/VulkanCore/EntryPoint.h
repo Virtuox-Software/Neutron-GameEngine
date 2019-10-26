@@ -1,13 +1,42 @@
 #pragma once
+/*
+#ifdef PLATFORM_WINDOWS
 
-#include "../pch.h"
-#include "Application.h"
+extern GalaxyCloudEngine::MainApplication* GalaxyCloudEngine::CreateApplication();
 
-namespace VulkanCore
+int main()
 {
-	class Application
-	{
-		
-	};
+	GalaxyCloudEngine::Log::Init();
+	auto app = GalaxyCloudEngine::CreateApplication();
+	app->run();
+	delete app;
+
+	return 0;
 }
 
+*/
+/*
+int main()
+{
+	Application EngineApplication;
+
+	try {
+		EngineApplication.run();
+	}
+	catch (const std::exception & e) {
+		std::cerr << e.what() << std::endl;
+		// Return FAILURE if the program gets an error.
+
+		DontCloseConsole;
+
+		// Close the program when an error occurs
+		return EXIT_FAILURE;
+	}
+
+	DontCloseConsole;
+
+	// Return SUCCES if the program can run.
+	return EXIT_SUCCESS;
+}
+*/
+#endif

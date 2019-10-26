@@ -1,13 +1,3 @@
-#include <gpch.h>
-#include <Engine.h>
+#include "gpch.h"
+#include "Game.h"
 
-class Game : public VulkanCore::Application
-{
-	Game() {
-		DEBUG_INFO("Game Start");
-	}
-
-	~Game() {
-		DEBUG_INFO("Game End");
-	}
-};
