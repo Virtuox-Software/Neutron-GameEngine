@@ -12,6 +12,7 @@
 #include <optional>
 #include <set>
 
+#include <vulkan/vulkan.h>
 #include "VulkanCore/CoreLog.h"
 
 #pragma region Simple Functionality

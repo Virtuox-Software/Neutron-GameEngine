@@ -44,11 +44,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
-    <TargetName>VulkanEngine</TargetName>
+    <TargetName>GalaxyCloudEngine</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
-    <TargetName>VulkanEngine</TargetName>
+    <TargetName>GalaxyCloudEngine</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -93,7 +93,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\Client\AppLog.cpp" />
-    <ClCompile Include="source\Game\Game.cpp" />
+    <ClCompile Include="source\Game\GameFunctions.cpp" />
+    <ClCompile Include="source\Game\Scripts\Game.cpp" />
     <ClCompile Include="source\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -104,13 +105,13 @@
   <ItemGroup>
     <ClInclude Include="source\Client\AppLog.h" />
     <ClInclude Include="source\EntryPoint.h" />
-    <ClInclude Include="source\Game\Game.h" />
+    <ClInclude Include="source\Game\GameFunctions.h" />
+    <ClInclude Include="source\Game\Scripts\Game.h" />
     <ClInclude Include="source\pch.h" />
     <ClInclude Include="source\VulkanCore\Application.h" />
     <ClInclude Include="source\VulkanCore\Core.h" />
     <ClInclude Include="source\VulkanCore\CoreLog.h" />
     <ClInclude Include="source\VulkanCore\EntryPoint.h" />
-    <ClInclude Include="source\VulkanCore\GameRunner.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

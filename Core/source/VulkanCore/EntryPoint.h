@@ -1,4 +1,21 @@
 #pragma once
+/* Link / References and Credits to other sources and information.
+ * 
+ * // TODO: INSERT SOURCE OF INFORMATION!
+ */
+
+/*
+#include <pch.h>
+#include "VulkanCore/Application.h"
+#include "Game/GameFunctions.h"
+
+void MainApplication::Game()
+{
+	std::cout << "The Game function in Game.cpp is empty or doesn't exist in there!" << std::endl;
+}
+*/
+
+// Hazel way of Multi project code execution 
 /*
 #ifdef PLATFORM_WINDOWS
 
@@ -13,30 +30,25 @@ int main()
 
 	return 0;
 }
-
 */
+
 /*
-int main()
+#include "Application.h"
+
+class Application : GalaxyCloudEngine::MainApplication
 {
-	Application EngineApplication;
-
-	try {
-		EngineApplication.run();
-	}
-	catch (const std::exception & e) {
-		std::cerr << e.what() << std::endl;
-		// Return FAILURE if the program gets an error.
-
-		DontCloseConsole;
-
-		// Close the program when an error occurs
-		return EXIT_FAILURE;
+private:
+	bool OverrideHasRun = false;
+public:
+	void run()
+	{
+		GalaxyCloudEngine::MainApplication::run();
 	}
 
-	DontCloseConsole;
-
-	// Return SUCCES if the program can run.
-	return EXIT_SUCCESS;
-}
+	//virtual void GameRun() { }
+	virtual void Game() override
+	{
+		GameRun();
+	}
+};
 */
-#endif
