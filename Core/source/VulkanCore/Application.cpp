@@ -1,6 +1,24 @@
 #include "pch.h"
 #include "Application.h"
 
+/* TODO and other information
+ * 
+ * TODO: createVertexBuffer on Line 585
+ * 
+ * all the code is on page 158 of the Vulkan Documentation.pdf
+ * 
+ * Information:
+ * 
+ * https://github.com/Overv/VulkanTutorial/blob/master/code/18_vertex_buffer.cpp
+ * 
+ * Extra information:
+ * 
+ * VkPipeline 0xb5f68b000000000e[] expects that this Command Buffer's vertex binding Index 0 
+ * should be set via vkCmdBindVertexBuffers. This is because VkVertexInputBindingDescription,
+ * struct at index 0 of pVertexBindingDescriptions has a binding value of 0.
+ * https://stackoverflow.com/questions/42353362/vulkan-vkvertexinputbindingdescription-always-wrong-with-geometry-shader
+*/
+
 int main()
 {
 	MainApplication EngineApplication;
@@ -41,7 +59,7 @@ void MainApplication::initWindow() {
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	window = glfwCreateWindow(WIDTH, HEIGHT, VkApplicationName, nullptr, nullptr);
-
+	//glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
@@ -66,6 +84,7 @@ void MainApplication::initVulkan() {
 	createFrameBuffers();
 	// Command pool for drawing on the Window.
 	createCommandPool();
+	createVertexBuffer();
 	createCommandBuffers();
 	// Take image from swap chain and pass it to render the image / frame.
 	createSyncObjects();
@@ -193,7 +212,7 @@ void MainApplication::pickPhysicalDevice() {
 	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
 	if (deviceCount == 0) {
-		throw std::runtime_error("failed to find GPUs with Vulkan support!");
+		throw std::runtime_error("Failed to find GPUs with Vulkan support!");
 	}
 
 	std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -264,8 +283,7 @@ void MainApplication::createSwapChain() {
 	VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
 	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-	if (swapChainSupport.capabilities.maxImageCount > 0 &&
-		imageCount > swapChainSupport.capabilities.maxImageCount) {
+	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
 		imageCount = swapChainSupport.capabilities.maxImageCount;
 	}
 
@@ -297,10 +315,8 @@ void MainApplication::createSwapChain() {
 	createInfo.presentMode = presentMode;
 	createInfo.clipped = VK_TRUE;
 
-	createInfo.oldSwapchain = VK_NULL_HANDLE;
-
 	if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create swap chain!");
+		throw std::runtime_error("Failed to create swap chain!");
 	}
 
 	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
@@ -400,8 +416,14 @@ void MainApplication::createGraphicPipeline() {
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 0;
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
+
+	auto bindingDescriptions = Vertex::getBindingDescription();
+	auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+	vertexInputInfo.pVertexBindingDescriptions = &bindingDescriptions;
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -569,6 +591,10 @@ void MainApplication::createCommandPool() {
 	}
 }
 
+void MainApplication::createVertexBuffer() {
+	// TODO: Page 158 of Vulkan API Documentation
+}
+
 void MainApplication::createCommandBuffers() {
 	commandBuffers.resize(swapChainFramebuffers.size());
 
@@ -624,6 +650,7 @@ void MainApplication::createSyncObjects() {
 	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+	imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
 
 	VkSemaphoreCreateInfo semaphoreInfo = {};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -634,9 +661,9 @@ void MainApplication::createSyncObjects() {
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) ||
+			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
 			vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to create semaphores for a frame!");
+			throw std::runtime_error("failed to create synchronization objects for a frame!");
 		}
 	}
 }
@@ -645,23 +672,21 @@ void MainApplication::drawFrame() {
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(device, swapChain, std::numeric_limits<uint64_t>::max(),
-		imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-	// Check if the swap chain is out of date and if so recreate it
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-		framebufferResized = false;
 		recreateSwapChain();
 		return;
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-		throw std::runtime_error("Failed to acquire swap chain image!");
+		throw std::runtime_error("failed to acquire swap chain image!");
 	}
 
-	// Get the next image for the swap chain to use
-	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+	if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
+		vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+	}
+	imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
-	// Set all the information that the swap chain needs
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -681,10 +706,9 @@ void MainApplication::drawFrame() {
 	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to submit draw command buffer!");
+		throw std::runtime_error("failed to submit draw command buffer!");
 	}
 
-	// Set all the information and data for the present mode
 	VkPresentInfoKHR presentInfo = {};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
@@ -699,11 +723,12 @@ void MainApplication::drawFrame() {
 
 	result = vkQueuePresentKHR(presentQueue, &presentInfo);
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
+		framebufferResized = false;
 		recreateSwapChain();
 	}
 	else if (result != VK_SUCCESS) {
-		throw std::runtime_error("Failed to present swap chain image!");
+		throw std::runtime_error("failed to present swap chain image!");
 	}
 
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -965,3 +990,5 @@ VKAPI_ATTR VkBool32 VKAPI_CALL MainApplication::debugCallback(VkDebugUtilsMessag
 
 	return VK_FALSE;
 }
+
+#pragma endregion

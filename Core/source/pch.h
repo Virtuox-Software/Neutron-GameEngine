@@ -12,11 +12,13 @@
 #include <optional>
 #include <set>
 
+#include <array>
+
 #include <vulkan/vulkan.h>
 #include "VulkanCore/CoreLog.h"
 
 #pragma region Simple Functionality
-	#if false
+	#if true
 	///<summary>Prevent the user from closing the console automaticaly. Press Enter to Exit.</summary>
 	#define DontCloseConsole std::cout << "Press Enter to Exit the program!" << std::endl; std::cin.get();
 	#else
