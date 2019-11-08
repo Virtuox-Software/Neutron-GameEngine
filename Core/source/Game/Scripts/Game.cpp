@@ -6,5 +6,5 @@ Game::~Game() { }
 
 void Game::ExecGame() 
 {
-	std::cout << "Execute Game: It worked!" << std::endl;
+	//std::cout << "Execute Game: It worked!" << std::endl;
 }

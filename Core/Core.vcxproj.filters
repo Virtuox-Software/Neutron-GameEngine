@@ -49,9 +49,6 @@
     <ClInclude Include="source\VulkanCore\Core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="source\VulkanCore\GameRunner.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="source\VulkanCore\EntryPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>

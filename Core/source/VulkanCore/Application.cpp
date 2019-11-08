@@ -30,7 +30,6 @@ void MainApplication::run() {
 	initWindow();
 	initVulkan();
 	initGame();
-
 	mainLoop();
 	cleanup();
 }
@@ -42,6 +41,13 @@ void MainApplication::initWindow() {
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	window = glfwCreateWindow(WIDTH, HEIGHT, VkApplicationName, nullptr, nullptr);
+
+	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+}
+
+void MainApplication::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+	auto app = reinterpret_cast<MainApplication*>(glfwGetWindowUserPointer(window));
+	app->framebufferResized = true;
 }
 
 void MainApplication::initVulkan() {
@@ -72,14 +78,13 @@ void MainApplication::initGame()
 	game.Init();
 }
 
-
 void MainApplication::mainLoop() {
 	//void gameFunctionExec = GameFunction;
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		// Game Update Function
 		game.Update();
-		// Do the Draw Frame shit
+		// Do the Draw a Frame after
 		drawFrame();
 	}
 
@@ -87,6 +92,8 @@ void MainApplication::mainLoop() {
 }
 
 void MainApplication::cleanup() {
+	cleanupSwapChain();
+
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
 		vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
@@ -96,23 +103,6 @@ void MainApplication::cleanup() {
 	// Clean up the Command pool that has processed the commands to draw in the Window.
 	vkDestroyCommandPool(device, commandPool, nullptr);
 
-	// Clean up the frame buffers
-	for (auto framebuffer : swapChainFramebuffers) {
-		vkDestroyFramebuffer(device, framebuffer, nullptr);
-	}
-
-	// Clean up the Pipeline we created to be able to render on the Window
-	vkDestroyPipeline(device, graphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-	vkDestroyRenderPass(device, renderPass, nullptr);
-
-	// Clean up the image views
-	for (auto imageViews : swapChainImageViews) {
-		vkDestroyImageView(device, imageViews, nullptr);
-	}
-
-	// Clean up the Swap Chain we created for each frame to be able to get rendered and swapped.
-	vkDestroySwapchainKHR(device, swapChain, nullptr);
 	vkDestroyDevice(device, nullptr);
 
 	if (enableValidationLayers) {
@@ -653,11 +643,25 @@ void MainApplication::createSyncObjects() {
 
 void MainApplication::drawFrame() {
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	uint32_t imageIndex;
+	VkResult result = vkAcquireNextImageKHR(device, swapChain, std::numeric_limits<uint64_t>::max(),
+		imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+	// Check if the swap chain is out of date and if so recreate it
+	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+		framebufferResized = false;
+		recreateSwapChain();
+		return;
+	}
+	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+		throw std::runtime_error("Failed to acquire swap chain image!");
+	}
+
+	// Get the next image for the swap chain to use
 	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
+	// Set all the information that the swap chain needs
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -674,10 +678,13 @@ void MainApplication::drawFrame() {
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
 
+	vkResetFences(device, 1, &inFlightFences[currentFrame]);
+
 	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to submit draw command buffer!");
 	}
 
+	// Set all the information and data for the present mode
 	VkPresentInfoKHR presentInfo = {};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
@@ -690,13 +697,55 @@ void MainApplication::drawFrame() {
 
 	presentInfo.pImageIndices = &imageIndex;
 
-	vkQueuePresentKHR(presentQueue, &presentInfo);
+	result = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		recreateSwapChain();
+	}
+	else if (result != VK_SUCCESS) {
+		throw std::runtime_error("Failed to present swap chain image!");
+	}
 
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-#pragma region functions with return types
+void MainApplication::cleanupSwapChain() {
+	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
+		vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
+	}
 
+	vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+
+	vkDestroyPipeline(device, graphicsPipeline, nullptr);
+	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+	vkDestroyRenderPass(device, renderPass, nullptr);
+	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+		vkDestroyImageView(device, swapChainImageViews[i], nullptr);
+	}
+
+	vkDestroySwapchainKHR(device, swapChain, nullptr);
+}
+
+void MainApplication::recreateSwapChain() {
+	int width = 0, height = 0;
+	while (width == 0 || height == 0) {
+		glfwGetFramebufferSize(window, &width, &height);
+		glfwWaitEvents();
+	}
+
+	vkDeviceWaitIdle(device);
+
+	cleanupSwapChain();
+
+	createSwapChain();
+	createImageView();
+	createRenderPass();
+	createGraphicPipeline();
+	createFrameBuffers();
+	createCommandBuffers();
+}
+
+///<summary>Set info for the shaders and shader modules</summary>
 VkShaderModule MainApplication::createShaderModule(const std::vector<char>& code) {
 	VkShaderModuleCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -711,6 +760,7 @@ VkShaderModule MainApplication::createShaderModule(const std::vector<char>& code
 	return shaderModule;
 }
 
+///<summary>Set the format for the Vulkan Surface</summary>
 VkSurfaceFormatKHR MainApplication::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 	for (const auto& availableFormat : availableFormats) {
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
@@ -721,6 +771,7 @@ VkSurfaceFormatKHR MainApplication::chooseSwapSurfaceFormat(const std::vector<Vk
 	return availableFormats[0];
 }
 
+///<summary>Choose the present mode that is best suited for the current hardware and software</summary>
 VkPresentModeKHR MainApplication::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	for (const auto& availablePresentMode : availablePresentModes) {
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -731,20 +782,30 @@ VkPresentModeKHR MainApplication::chooseSwapPresentMode(const std::vector<VkPres
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
+///<summary>Choose swap extent according to the screen width and height</summary>
 VkExtent2D MainApplication::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
 	if (capabilities.currentExtent.width != UINT32_MAX) {
 		return capabilities.currentExtent;
 	}
 	else {
-		VkExtent2D actualExtent = { WIDTH, HEIGHT };
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
 
-		actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
-		actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
+		VkExtent2D actualExtent = { 
+			static_cast<uint32_t>(width), 
+			static_cast<uint32_t>(height) 
+		};
+
+		actualExtent.width = std::max(capabilities.minImageExtent.width, 
+			std::min(capabilities.maxImageExtent.width, actualExtent.width));
+		actualExtent.height = std::max(capabilities.minImageExtent.height, 
+std::min(capabilities.maxImageExtent.height, actualExtent.height));
 
 		return actualExtent;
 	}
 }
 
+///<summary>Set information and data for the quary Swap Chain</summary>
 SwapChainSupportDetails MainApplication::querySwapChainSupport(VkPhysicalDevice device) {
 	SwapChainSupportDetails details;
 
@@ -769,6 +830,7 @@ SwapChainSupportDetails MainApplication::querySwapChainSupport(VkPhysicalDevice 
 	return details;
 }
 
+///<summary>Check if the hardware and software is compatible with Vulkan</summary>
 bool MainApplication::isDeviceSuitable(VkPhysicalDevice device) {
 	QueueFamilyIndices indices = findQueueFamilies(device);
 
@@ -783,6 +845,7 @@ bool MainApplication::isDeviceSuitable(VkPhysicalDevice device) {
 	return indices.isComplete() && extensionsSupported && swapChainAdequate;
 }
 
+///<summary>Check if the current hardware suppports Device Extensions</summary>
 bool MainApplication::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 	uint32_t extensionCount;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -799,6 +862,7 @@ bool MainApplication::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 	return requiredExtensions.empty();
 }
 
+///<summary>This function will return </summary>
 QueueFamilyIndices MainApplication::findQueueFamilies(VkPhysicalDevice device) {
 	QueueFamilyIndices indices;
 
@@ -831,6 +895,7 @@ QueueFamilyIndices MainApplication::findQueueFamilies(VkPhysicalDevice device) {
 	return indices;
 }
 
+///<summary>Return the Extensions from Vulkan that are required for the Extentions</summary>
 std::vector<const char*> MainApplication::getRequiredExtensions() {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
@@ -845,6 +910,7 @@ std::vector<const char*> MainApplication::getRequiredExtensions() {
 	return extensions;
 }
 
+///<summary>Check if validation layers is supported by the hardware and software that has been installed</summary>
 bool MainApplication::checkValidationLayerSupport() {
 	uint32_t layerCount;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -870,19 +936,25 @@ bool MainApplication::checkValidationLayerSupport() {
 	return true;
 }
 
+///<summary>Read and return a file a the given file path.</summary>
 std::vector<char> MainApplication::readFile(const std::string& filename) {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
+	// Check if the file can be openen. if not throw a runtime error
 	if (!file.is_open()) {
 		throw std::runtime_error("Failed to open file: " + filename + "!");
 	}
 
+	// get the size of the file and add all the data in the file to a char array
 	size_t fileSize = (size_t)file.tellg();
 	std::vector<char> buffer(fileSize);
 
+	// Go to the next character
 	file.seekg(0);
+	// Read all the data thats in the buffer array.
 	file.read(buffer.data(), fileSize);
 
+	// close the file
 	file.close();
 
 	return buffer;
@@ -893,6 +965,3 @@ VKAPI_ATTR VkBool32 VKAPI_CALL MainApplication::debugCallback(VkDebugUtilsMessag
 
 	return VK_FALSE;
 }
-#pragma endregion // functions with return types
-
-#pragma endregion // MainApplication Functions

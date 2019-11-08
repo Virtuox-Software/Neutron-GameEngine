@@ -76,8 +76,6 @@ public:
 	void run();
 
 private:
-
-#pragma region PrivateVariables
 	GameFunctions game;
 
 	GLFWwindow* window;
@@ -113,9 +111,12 @@ private:
 	std::vector<VkSemaphore> renderFinishedSemaphores;
 	std::vector<VkFence> inFlightFences;
 	size_t currentFrame = 0;
-#pragma endregion
+
+	bool framebufferResized = false;
 
 	void initWindow();
+
+	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 	void initVulkan();
 
@@ -154,6 +155,10 @@ private:
 	void createSyncObjects();
 
 	void drawFrame();
+
+	void cleanupSwapChain();
+
+	void recreateSwapChain();
 
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 
