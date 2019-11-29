@@ -9,14 +9,9 @@
  *
 */
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#include <glm/glm.hpp>
-
-#include "Game/GameFunctions.h"
-
-// Window pixel ratios
+namespace VirtuoxSoftware
+{
+	// Window pixel ratios
 const int WIDTH = 1024; // 1280 / 1024
 const int HEIGHT = 576; // 720  / 576
 
@@ -24,8 +19,8 @@ const int HEIGHT = 576; // 720  / 576
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 // information about the Vulkan Application.
-#define VkApplicationName	"Test Game"
-#define VkEngineName		"Cold Galaxy Engine"
+#define vs_ApplicatioName	"Virtuox Game"
+#define vs_EngineName		"Virtuox Software Engine"
 
 const std::vector<const char*> validationLayers = {
 	"VK_LAYER_KHRONOS_validation"
@@ -35,7 +30,7 @@ const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-#ifdef DEBUG
+#ifdef n_DEBUG_MODE
 const bool enableValidationLayers = true;
 #else
 const bool enableValidationLayers = false;
@@ -104,15 +99,15 @@ struct Vertex {
 };
 
 const std::vector<Vertex> vertices = {
-	{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 };
 
-class MainApplication {
+class VirtuoxEngine
+{
 public:
 	void run();
-
 private:
 	GLFWwindow* window;
 
@@ -138,6 +133,10 @@ private:
 	VkPipeline graphicsPipeline;
 
 	VkCommandPool commandPool;
+
+	VkBuffer vertexBuffer;
+	VkDeviceMemory vertexBufferMemory;
+
 	std::vector<VkCommandBuffer> commandBuffers;
 
 	std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -148,6 +147,8 @@ private:
 
 	bool framebufferResized = false;
 
+#pragma region VS_EngineFunctions
+	
 	// Game instance
 	GameFunctions game;
 
@@ -161,7 +162,11 @@ private:
 
 	void mainLoop();
 
+	void cleanupSwapChain();
+
 	void cleanup();
+
+	void recreateSwapChain();
 
 	void createInstance();
 
@@ -177,27 +182,25 @@ private:
 
 	void createSwapChain();
 
-	void createImageView();
+	void createImageViews();
 
 	void createRenderPass();
 
-	void createGraphicPipeline();
+	void createGraphicsPipeline();
 
-	void createFrameBuffers();
+	void createFramebuffers();
 
 	void createCommandPool();
 
 	void createVertexBuffer();
+
+	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 	void createCommandBuffers();
 
 	void createSyncObjects();
 
 	void drawFrame();
-
-	void cleanupSwapChain();
-
-	void recreateSwapChain();
 
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 
@@ -221,5 +224,9 @@ private:
 
 	static std::vector<char> readFile(const std::string& filename);
 
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
+#pragma endregion
+
 };
+}

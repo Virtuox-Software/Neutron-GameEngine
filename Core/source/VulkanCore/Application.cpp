@@ -1,32 +1,27 @@
-#include "pch.h"
-#include "Application.h"
-
 /* TODO and other information
  * 
- * TODO: createVertexBuffer on Line 585
+ * TODO: Staging buffer Page 167
  * 
- * all the code is on page 158 of the Vulkan Documentation.pdf
+ * all the code is on page 167 and beyond of the Vulkan Documentation.pdf
  * 
  * Information:
  * 
- * https://github.com/Overv/VulkanTutorial/blob/master/code/18_vertex_buffer.cpp
+ * https://github.com/Overv/VulkanTutorial/blob/master/code/19_staging_buffer.cpp
  * 
  * Extra information:
  * 
- * VkPipeline 0xb5f68b000000000e[] expects that this Command Buffer's vertex binding Index 0 
- * should be set via vkCmdBindVertexBuffers. This is because VkVertexInputBindingDescription,
- * struct at index 0 of pVertexBindingDescriptions has a binding value of 0.
- * https://stackoverflow.com/questions/42353362/vulkan-vkvertexinputbindingdescription-always-wrong-with-geometry-shader
+ * ...
 */
+#include "pch.h"
+#include "Application.h"
 
-int main()
-{
-	MainApplication EngineApplication;
+// Main function, Start of the program.
+int main() {
+	VirtuoxSoftware::VirtuoxEngine EngineApplication;
 
 	try {
 		EngineApplication.run();
-	}
-	catch (const std::exception & e) {
+	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		// Return FAILURE if the program gets an error.
 
@@ -41,34 +36,35 @@ int main()
 	// Return SUCCES if the program can run.
 	return EXIT_SUCCESS;
 }
-
+namespace VirtuoxSoftware
+{
 #pragma region MainApplication Functions
 
-void MainApplication::run() {
+void VirtuoxEngine::run() {
 	initWindow();
 	initVulkan();
-	initGame();
+	initGame(); // Init the Game class, For game functions etc.
 	mainLoop();
 	cleanup();
 }
 
-void MainApplication::initWindow() {
+void VirtuoxEngine::initWindow() {
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-	window = glfwCreateWindow(WIDTH, HEIGHT, VkApplicationName, nullptr, nullptr);
-	//glfwSetWindowUserPointer(window, this);
+	window = glfwCreateWindow(WIDTH, HEIGHT, vs_ApplicatioName, nullptr, nullptr);
+	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
-void MainApplication::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-	auto app = reinterpret_cast<MainApplication*>(glfwGetWindowUserPointer(window));
+void VirtuoxEngine::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+	auto app = reinterpret_cast<VirtuoxEngine*>(glfwGetWindowUserPointer(window));
 	app->framebufferResized = true;
 }
 
-void MainApplication::initVulkan() {
+void VirtuoxEngine::initVulkan() {
 	// Creating a Window
 	createInstance();
 	setupDebugMessenger();
@@ -78,10 +74,10 @@ void MainApplication::initVulkan() {
 	createLogicalDevice();
 	createSwapChain();
 	// Create Image view and render pass to render something on screen
-	createImageView();
+	createImageViews();
 	createRenderPass();
-	createGraphicPipeline();
-	createFrameBuffers();
+	createGraphicsPipeline();
+	createFramebuffers();
 	// Command pool for drawing on the Window.
 	createCommandPool();
 	createVertexBuffer();
@@ -90,14 +86,13 @@ void MainApplication::initVulkan() {
 	createSyncObjects();
 }
 
-void MainApplication::initGame()
-{
+void VirtuoxEngine::initGame() {
 	game = GameFunctions();
 	// Execute the game.Init function
 	game.Init();
 }
 
-void MainApplication::mainLoop() {
+void VirtuoxEngine::mainLoop() {
 	//void gameFunctionExec = GameFunction;
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -110,8 +105,29 @@ void MainApplication::mainLoop() {
 	vkDeviceWaitIdle(device);
 }
 
-void MainApplication::cleanup() {
+void VirtuoxEngine::cleanupSwapChain() {
+	for (auto framebuffer : swapChainFramebuffers) {
+		vkDestroyFramebuffer(device, framebuffer, nullptr);
+	}
+
+	vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+
+	vkDestroyPipeline(device, graphicsPipeline, nullptr);
+	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+	vkDestroyRenderPass(device, renderPass, nullptr);
+
+	for (auto imageView : swapChainImageViews) {
+		vkDestroyImageView(device, imageView, nullptr);
+	}
+
+	vkDestroySwapchainKHR(device, swapChain, nullptr);
+}
+
+void VirtuoxEngine::cleanup() {
 	cleanupSwapChain();
+
+	vkDestroyBuffer(device, vertexBuffer, nullptr);
+	vkFreeMemory(device, vertexBufferMemory, nullptr);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -139,8 +155,27 @@ void MainApplication::cleanup() {
 	glfwTerminate();
 }
 
-// CreateInstance Function
-void MainApplication::createInstance() {
+void VirtuoxEngine::recreateSwapChain() {
+	int width = 0, height = 0;
+	glfwGetFramebufferSize(window, &width, &height);
+	while (width == 0 || height == 0) {
+		glfwGetFramebufferSize(window, &width, &height);
+		glfwWaitEvents();
+	}
+
+	vkDeviceWaitIdle(device);
+
+	cleanupSwapChain();
+
+	createSwapChain();
+	createImageViews();
+	createRenderPass();
+	createGraphicsPipeline();
+	createFramebuffers();
+	createCommandBuffers();
+}
+
+void VirtuoxEngine::createInstance() {
 
 	if (enableValidationLayers && !checkValidationLayerSupport()) {
 		throw std::runtime_error("validation layers requested, but not available!");
@@ -149,9 +184,9 @@ void MainApplication::createInstance() {
 	// App Info
 	VkApplicationInfo appinfo = {};
 	appinfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-	appinfo.pApplicationName = VkApplicationName; // The name of the Application.
+	appinfo.pApplicationName = vs_ApplicatioName; // The name of the Application.
 	appinfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-	appinfo.pEngineName = VkEngineName; // The name of the Engine / Framework.
+	appinfo.pEngineName = vs_EngineName; // The name of the Engine / Framework.
 	appinfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 	appinfo.apiVersion = VK_API_VERSION_1_0;
 	// Create Info
@@ -169,7 +204,7 @@ void MainApplication::createInstance() {
 		createInfo.ppEnabledLayerNames = validationLayers.data();
 
 		populateDebugMessengerCreateInfo(debugCreateInfo);
-		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
+		createInfo.pNext = static_cast<VkDebugUtilsMessengerCreateInfoEXT*>(&debugCreateInfo);
 	}
 	else {
 		createInfo.enabledLayerCount = 0;
@@ -182,16 +217,18 @@ void MainApplication::createInstance() {
 	}
 }
 
-void MainApplication::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+void VirtuoxEngine::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
 	createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 	createInfo.pfnUserCallback = debugCallback;
 }
 
-void MainApplication::setupDebugMessenger() {
-	if (!enableValidationLayers) return;
+void VirtuoxEngine::setupDebugMessenger() {
+	if constexpr (!enableValidationLayers) return;
 
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
 	populateDebugMessengerCreateInfo(createInfo);
@@ -201,13 +238,13 @@ void MainApplication::setupDebugMessenger() {
 	}
 }
 
-void MainApplication::createSurface() {
+void VirtuoxEngine::createSurface() {
 	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create window surface!");
 	}
 }
 
-void MainApplication::pickPhysicalDevice() {
+void VirtuoxEngine::pickPhysicalDevice() {
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -225,16 +262,16 @@ void MainApplication::pickPhysicalDevice() {
 		}
 	}
 
-	if (physicalDevice == VK_NULL_HANDLE) {
+	if (physicalDevice == nullptr) {
 		throw std::runtime_error("failed to find a suitable GPU!");
 	}
 }
 
-void MainApplication::createLogicalDevice() {
+void VirtuoxEngine::createLogicalDevice() {
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+	std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
 	float queuePriority = 1.0f;
 	for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -275,7 +312,7 @@ void MainApplication::createLogicalDevice() {
 	vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
-void MainApplication::createSwapChain() {
+void VirtuoxEngine::createSwapChain() {
 	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
 
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -299,7 +336,7 @@ void MainApplication::createSwapChain() {
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-	uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+	uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
 	if (indices.graphicsFamily != indices.presentFamily) {
 		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -327,22 +364,19 @@ void MainApplication::createSwapChain() {
 	swapChainExtent = extent;
 }
 
-void MainApplication::createImageView() {
+void VirtuoxEngine::createImageViews() {
 	swapChainImageViews.resize(swapChainImages.size());
 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
 		VkImageViewCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = swapChainImages[i];
-
 		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		createInfo.format = swapChainImageFormat;
-
 		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
 		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
 		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		createInfo.subresourceRange.baseMipLevel = 0;
 		createInfo.subresourceRange.levelCount = 1;
@@ -350,24 +384,19 @@ void MainApplication::createImageView() {
 		createInfo.subresourceRange.layerCount = 1;
 
 		if (vkCreateImageView(device, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to create image views!");
+			throw std::runtime_error("failed to create image views!");
 		}
-
-
 	}
 }
 
-void MainApplication::createRenderPass() {
+void VirtuoxEngine::createRenderPass() {
 	VkAttachmentDescription colorAttachment = {};
 	colorAttachment.format = swapChainImageFormat;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-
 	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-
 	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-
 	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
@@ -377,9 +406,16 @@ void MainApplication::createRenderPass() {
 
 	VkSubpassDescription subpass = {};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &colorAttachmentRef;
+
+	VkSubpassDependency dependency = {};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
 	VkRenderPassCreateInfo renderPassInfo = {};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -387,15 +423,19 @@ void MainApplication::createRenderPass() {
 	renderPassInfo.pAttachments = &colorAttachment;
 	renderPassInfo.subpassCount = 1;
 	renderPassInfo.pSubpasses = &subpass;
+	renderPassInfo.dependencyCount = 1;
+	renderPassInfo.pDependencies = &dependency;
 
 	if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to create render pass!");
+		throw std::runtime_error("failed to create render pass!");
 	}
 }
 
-void MainApplication::createGraphicPipeline() {
-	auto vertShaderCode = readFile("C:/Users/Rink/source/repos/VulkanAPI-VerdiepingSoftware/Core/source/Shaders/vert.spv");
-	auto fragShaderCode = readFile("C:/Users/Rink/source/repos/VulkanAPI-VerdiepingSoftware/Core/source/Shaders/frag.spv");
+void VirtuoxEngine::createGraphicsPipeline() {
+	auto vertShaderCode = readFile(
+		"C:/Users/Rink/source/repos/VulkanAPI-VerdiepingSoftware/Core/source/Shaders/vert.spv");
+	auto fragShaderCode = readFile(
+		"C:/Users/Rink/source/repos/VulkanAPI-VerdiepingSoftware/Core/source/Shaders/frag.spv");
 
 	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
 	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -412,7 +452,7 @@ void MainApplication::createGraphicPipeline() {
 	fragShaderStageInfo.module = fragShaderModule;
 	fragShaderStageInfo.pName = "main";
 
-	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+	VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -433,14 +473,14 @@ void MainApplication::createGraphicPipeline() {
 	VkViewport viewPort = {};
 	viewPort.x = 0.0f;
 	viewPort.y = 0.0f;
-	viewPort.width = (float)swapChainExtent.width;
-	viewPort.height = (float)swapChainExtent.height;
+	viewPort.width = static_cast<float>(swapChainExtent.width);
+	viewPort.height = static_cast<float>(swapChainExtent.height);
 
 	viewPort.minDepth = 0.0f;
 	viewPort.maxDepth = 1.0f;
 
 	VkRect2D scissor = {};
-	scissor.offset = { 0, 0 };
+	scissor.offset = {0, 0};
 	scissor.extent = swapChainExtent;
 
 	VkPipelineViewportStateCreateInfo viewportState = {};
@@ -544,10 +584,10 @@ void MainApplication::createGraphicPipeline() {
 	pipelineInfo.layout = pipelineLayout;
 	pipelineInfo.renderPass = renderPass;
 	pipelineInfo.subpass = 0;
-	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+	pipelineInfo.basePipelineHandle = nullptr;
 
-	if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1,
-		&pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+	if (vkCreateGraphicsPipelines(device, nullptr, 1,
+	                              &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create graphics pipeline!");
 	}
 
@@ -555,7 +595,7 @@ void MainApplication::createGraphicPipeline() {
 	vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
 
-void MainApplication::createFrameBuffers() {
+void VirtuoxEngine::createFramebuffers() {
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 
 	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
@@ -578,7 +618,7 @@ void MainApplication::createFrameBuffers() {
 	}
 }
 
-void MainApplication::createCommandPool() {
+void VirtuoxEngine::createCommandPool() {
 	QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
 
 	VkCommandPoolCreateInfo poolInfo = {};
@@ -591,11 +631,54 @@ void MainApplication::createCommandPool() {
 	}
 }
 
-void MainApplication::createVertexBuffer() {
-	// TODO: Page 158 of Vulkan API Documentation
+void VirtuoxEngine::createVertexBuffer() {
+	VkBufferCreateInfo bufferInfo = {};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = sizeof(vertices[0]) * vertices.size();
+
+	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	if(vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create vertex buffer!");
+	}
+
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
+
+	VkMemoryAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, 
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+	if(vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to allocate vertex buffer memory!");
+	}
+
+	vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
+
+	void* data;
+	vkMapMemory(device, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
+	memcpy(data, vertices.data(), (size_t)bufferInfo.size);
+	vkUnmapMemory(device, vertexBufferMemory);
 }
 
-void MainApplication::createCommandBuffers() {
+uint32_t VirtuoxEngine::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+	VkPhysicalDeviceMemoryProperties memProperties;
+	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+	for(uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+		if(typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+			return i;
+		}
+	}
+
+	throw std::runtime_error("Failed to find suitable memory type!");
+}
+
+void VirtuoxEngine::createCommandBuffers() {
 	commandBuffers.resize(swapChainFramebuffers.size());
 
 	VkCommandBufferAllocateInfo allocInfo = {};
@@ -605,26 +688,21 @@ void MainApplication::createCommandBuffers() {
 	allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
 
 	if (vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to allocate command buffers!");
+		throw std::runtime_error("failed to allocate command buffers!");
 	}
 
 	for (size_t i = 0; i < commandBuffers.size(); i++) {
 		VkCommandBufferBeginInfo beginInfo = {};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-		/*
-		// Optional
-		beginInfo.pInheritanceInfo = nullptr;
-		*/
+
 		if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to begin recording command buffer!");
+			throw std::runtime_error("failed to begin recording command buffer!");
 		}
 
 		VkRenderPassBeginInfo renderPassInfo = {};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = renderPass;
 		renderPassInfo.framebuffer = swapChainFramebuffers[i];
-
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = swapChainExtent;
 
@@ -636,17 +714,21 @@ void MainApplication::createCommandBuffers() {
 
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-		vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+		VkBuffer vertexBuffers[] = { vertexBuffer };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
+
+		vkCmdDraw(commandBuffers[i], static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
 		vkCmdEndRenderPass(commandBuffers[i]);
 
 		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to record command buffer!");
+			throw std::runtime_error("failed to record command buffer!");
 		}
 	}
 }
 
-void MainApplication::createSyncObjects() {
+void VirtuoxEngine::createSyncObjects() {
 	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -668,7 +750,7 @@ void MainApplication::createSyncObjects() {
 	}
 }
 
-void MainApplication::drawFrame() {
+void VirtuoxEngine::drawFrame() {
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 	uint32_t imageIndex;
@@ -679,7 +761,7 @@ void MainApplication::drawFrame() {
 		return;
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-		throw std::runtime_error("failed to acquire swap chain image!");
+		throw std::runtime_error("Failed to acquire swap chain image!");
 	}
 
 	if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
@@ -706,7 +788,7 @@ void MainApplication::drawFrame() {
 	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
-		throw std::runtime_error("failed to submit draw command buffer!");
+		throw std::runtime_error("Failed to submit draw command buffer!");
 	}
 
 	VkPresentInfoKHR presentInfo = {};
@@ -728,57 +810,20 @@ void MainApplication::drawFrame() {
 		recreateSwapChain();
 	}
 	else if (result != VK_SUCCESS) {
-		throw std::runtime_error("failed to present swap chain image!");
+		throw std::runtime_error("Failed to present swap chain image!");
 	}
 
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void MainApplication::cleanupSwapChain() {
-	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
-		vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
-	}
-
-	vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-
-	vkDestroyPipeline(device, graphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-	vkDestroyRenderPass(device, renderPass, nullptr);
-	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-		vkDestroyImageView(device, swapChainImageViews[i], nullptr);
-	}
-
-	vkDestroySwapchainKHR(device, swapChain, nullptr);
-}
-
-void MainApplication::recreateSwapChain() {
-	int width = 0, height = 0;
-	while (width == 0 || height == 0) {
-		glfwGetFramebufferSize(window, &width, &height);
-		glfwWaitEvents();
-	}
-
-	vkDeviceWaitIdle(device);
-
-	cleanupSwapChain();
-
-	createSwapChain();
-	createImageView();
-	createRenderPass();
-	createGraphicPipeline();
-	createFrameBuffers();
-	createCommandBuffers();
-}
-
-///<summary>Set info for the shaders and shader modules</summary>
-VkShaderModule MainApplication::createShaderModule(const std::vector<char>& code) {
+VkShaderModule VirtuoxEngine::createShaderModule(const std::vector<char>& code) {
 	VkShaderModuleCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	createInfo.codeSize = code.size();
 	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
 	VkShaderModule shaderModule;
-	if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+	if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule)) {
 		throw std::runtime_error("Failed to create shader module!");
 	}
 
@@ -786,9 +831,10 @@ VkShaderModule MainApplication::createShaderModule(const std::vector<char>& code
 }
 
 ///<summary>Set the format for the Vulkan Surface</summary>
-VkSurfaceFormatKHR MainApplication::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+VkSurfaceFormatKHR VirtuoxEngine::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 	for (const auto& availableFormat : availableFormats) {
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace ==
+			VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 			return availableFormat;
 		}
 	}
@@ -797,7 +843,7 @@ VkSurfaceFormatKHR MainApplication::chooseSwapSurfaceFormat(const std::vector<Vk
 }
 
 ///<summary>Choose the present mode that is best suited for the current hardware and software</summary>
-VkPresentModeKHR MainApplication::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
+VkPresentModeKHR VirtuoxEngine::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	for (const auto& availablePresentMode : availablePresentModes) {
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
 			return availablePresentMode;
@@ -808,30 +854,28 @@ VkPresentModeKHR MainApplication::chooseSwapPresentMode(const std::vector<VkPres
 }
 
 ///<summary>Choose swap extent according to the screen width and height</summary>
-VkExtent2D MainApplication::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
+VkExtent2D VirtuoxEngine::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
 	if (capabilities.currentExtent.width != UINT32_MAX) {
 		return capabilities.currentExtent;
 	}
-	else {
-		int width, height;
-		glfwGetFramebufferSize(window, &width, &height);
+	int width, height;
+	glfwGetFramebufferSize(window, &width, &height);
 
-		VkExtent2D actualExtent = { 
-			static_cast<uint32_t>(width), 
-			static_cast<uint32_t>(height) 
-		};
+	VkExtent2D actualExtent = {
+		static_cast<uint32_t>(width),
+		static_cast<uint32_t>(height)
+	};
 
-		actualExtent.width = std::max(capabilities.minImageExtent.width, 
-			std::min(capabilities.maxImageExtent.width, actualExtent.width));
-		actualExtent.height = std::max(capabilities.minImageExtent.height, 
-std::min(capabilities.maxImageExtent.height, actualExtent.height));
+	actualExtent.width = std::max(capabilities.minImageExtent.width,
+	                              std::min(capabilities.maxImageExtent.width, actualExtent.width));
+	actualExtent.height = std::max(capabilities.minImageExtent.height,
+	                               std::min(capabilities.maxImageExtent.height, actualExtent.height));
 
-		return actualExtent;
-	}
+	return actualExtent;
 }
 
 ///<summary>Set information and data for the quary Swap Chain</summary>
-SwapChainSupportDetails MainApplication::querySwapChainSupport(VkPhysicalDevice device) {
+SwapChainSupportDetails VirtuoxEngine::querySwapChainSupport(VkPhysicalDevice device) {
 	SwapChainSupportDetails details;
 
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
@@ -856,7 +900,7 @@ SwapChainSupportDetails MainApplication::querySwapChainSupport(VkPhysicalDevice 
 }
 
 ///<summary>Check if the hardware and software is compatible with Vulkan</summary>
-bool MainApplication::isDeviceSuitable(VkPhysicalDevice device) {
+bool VirtuoxEngine::isDeviceSuitable(VkPhysicalDevice device) {
 	QueueFamilyIndices indices = findQueueFamilies(device);
 
 	bool extensionsSupported = checkDeviceExtensionSupport(device);
@@ -871,7 +915,7 @@ bool MainApplication::isDeviceSuitable(VkPhysicalDevice device) {
 }
 
 ///<summary>Check if the current hardware suppports Device Extensions</summary>
-bool MainApplication::checkDeviceExtensionSupport(VkPhysicalDevice device) {
+bool VirtuoxEngine::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 	uint32_t extensionCount;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -888,7 +932,7 @@ bool MainApplication::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 }
 
 ///<summary>This function will return </summary>
-QueueFamilyIndices MainApplication::findQueueFamilies(VkPhysicalDevice device) {
+QueueFamilyIndices VirtuoxEngine::findQueueFamilies(VkPhysicalDevice device) {
 	QueueFamilyIndices indices;
 
 	uint32_t queueFamilyCount = 0;
@@ -921,7 +965,7 @@ QueueFamilyIndices MainApplication::findQueueFamilies(VkPhysicalDevice device) {
 }
 
 ///<summary>Return the Extensions from Vulkan that are required for the Extentions</summary>
-std::vector<const char*> MainApplication::getRequiredExtensions() {
+std::vector<const char*> VirtuoxEngine::getRequiredExtensions() {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
 	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -936,7 +980,7 @@ std::vector<const char*> MainApplication::getRequiredExtensions() {
 }
 
 ///<summary>Check if validation layers is supported by the hardware and software that has been installed</summary>
-bool MainApplication::checkValidationLayerSupport() {
+bool VirtuoxEngine::checkValidationLayerSupport() {
 	uint32_t layerCount;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -962,7 +1006,7 @@ bool MainApplication::checkValidationLayerSupport() {
 }
 
 ///<summary>Read and return a file a the given file path.</summary>
-std::vector<char> MainApplication::readFile(const std::string& filename) {
+std::vector<char> VirtuoxEngine::readFile(const std::string& filename) {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
 	// Check if the file can be openen. if not throw a runtime error
@@ -971,7 +1015,7 @@ std::vector<char> MainApplication::readFile(const std::string& filename) {
 	}
 
 	// get the size of the file and add all the data in the file to a char array
-	size_t fileSize = (size_t)file.tellg();
+	size_t fileSize = static_cast<size_t>(file.tellg());
 	std::vector<char> buffer(fileSize);
 
 	// Go to the next character
@@ -985,10 +1029,12 @@ std::vector<char> MainApplication::readFile(const std::string& filename) {
 	return buffer;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL MainApplication::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+VKAPI_ATTR VkBool32 VKAPI_CALL VirtuoxEngine::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
 	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
 	return VK_FALSE;
 }
 
-#pragma endregion
+#pragma endregion	
+}

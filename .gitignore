@@ -356,3 +356,4 @@ healthchecksdb
 MigrationBackup/
 
 # End of https://www.gitignore.io/api/c++,windows,visualstudio
+Core/source/Client/ADD SCRIPTS WITH CODE THAT THE CLIENT NEEDS OR IS ALLOWED TO ACCESS
