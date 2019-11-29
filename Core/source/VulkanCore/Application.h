@@ -98,11 +98,27 @@ struct Vertex {
 	}
 };
 
-const std::vector<Vertex> vertices = {
-{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+#pragma region VertixArrays
+// const std::vector<Vertex> vertices;
+
+const std::vector<Vertex> TriangleVert = {
+	{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 };
+
+const std::vector<Vertex> SquareVert = {
+{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+{{-0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}}
+};
+
+const std::vector<uint16_t> indices = {
+	0, 1, 2, 2, 3, 0
+};
+
+#pragma endregion
 
 class VirtuoxEngine
 {
@@ -136,6 +152,8 @@ private:
 
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
 
 	std::vector<VkCommandBuffer> commandBuffers;
 
@@ -192,7 +210,9 @@ private:
 
 	void createCommandPool();
 
-	void createVertexBuffer();
+	void createVertexBuffer(std::vector<Vertex> vertices);
+
+	void createIndexBuffer();
 
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
