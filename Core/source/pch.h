@@ -1,15 +1,12 @@
 #pragma once
 
 // Include Directories and Libraries
-
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include <vulkan/vulkan.h>
 
 #include <iostream>
 #include <fstream>
@@ -24,6 +21,7 @@
 #include <optional>
 #include <set>
 
+#include <vulkan/vulkan.h>
 #include "Core/CoreLog.h"
 #include "Game/GameFunctions.h"
 

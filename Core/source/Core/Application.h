@@ -98,7 +98,7 @@ struct Vertex {
 	}
 };
 
-struct UniformBuferObject {
+struct UniformBufferObject {
 	glm::mat4 model;
 	glm::mat4 view;
 	glm::mat4 proj;
@@ -237,6 +237,8 @@ private:
 	void createCommandBuffers();
 
 	void createSyncObjects();
+
+	void updateUniformBuffer(uint32_t currentImage);
 
 	void drawFrame();
 
