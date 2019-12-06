@@ -1,8 +1,8 @@
 /* TODO and other information
  * 
- * TODO: Staging buffer Page 167
+ * TODO: Descriptor Layout and buffer
  * 
- * all the code is on page 167 and beyond of the Vulkan Documentation.pdf
+ * all the code is on page 178 and beyond of the Vulkan Documentation.pdf
  * 
  * Information:
  * 
@@ -14,11 +14,11 @@
 */
 #include "pch.h"
 #include "Application.h"
+#include "CoreFunctions.h"
 
 // Main function, Start of the program.
 int main() {
-	VirtuoxSoftware::VirtuoxEngine EngineApplication;
-
+	NeutronEngine::NeutronEngine EngineApplication;
 	try {
 		EngineApplication.run();
 	} catch (const std::exception& e) {
@@ -34,11 +34,11 @@ int main() {
 	// Return SUCCES if the program can run.
 	return EXIT_SUCCESS;
 }
-namespace VirtuoxSoftware
+namespace NeutronEngine
 {
 #pragma region MainApplication Functions
 
-void VirtuoxEngine::run() {
+void NeutronEngine::run() {
 	initWindow();
 	initVulkan();
 	initGame(); // Init the Game class, For game functions etc.
@@ -46,7 +46,7 @@ void VirtuoxEngine::run() {
 	cleanup();
 }
 
-void VirtuoxEngine::initWindow() {
+void NeutronEngine::initWindow() {
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -57,12 +57,12 @@ void VirtuoxEngine::initWindow() {
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
-void VirtuoxEngine::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-	auto app = reinterpret_cast<VirtuoxEngine*>(glfwGetWindowUserPointer(window));
+void NeutronEngine::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+	auto app = reinterpret_cast<NeutronEngine*>(glfwGetWindowUserPointer(window));
 	app->framebufferResized = true;
 }
 
-void VirtuoxEngine::initVulkan() {
+void NeutronEngine::initVulkan() {
 	// Creating a Window
 	createInstance();
 	setupDebugMessenger();
@@ -78,20 +78,20 @@ void VirtuoxEngine::initVulkan() {
 	createFramebuffers();
 	// Command pool for drawing on the Window.
 	createCommandPool();
-	createVertexBuffer(TriangleVert);
+	createVertexBuffer(SquareVert);
 	createIndexBuffer();
 	createCommandBuffers();
 	// Take image from swap chain and pass it to render the image / frame.
 	createSyncObjects();
 }
 
-void VirtuoxEngine::initGame() {
+void NeutronEngine::initGame() {
 	game = GameFunctions();
 	// Execute the game.Init function
 	game.Init();
 }
 
-void VirtuoxEngine::mainLoop() {
+void NeutronEngine::mainLoop() {
 	//void gameFunctionExec = GameFunction;
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -104,7 +104,7 @@ void VirtuoxEngine::mainLoop() {
 	vkDeviceWaitIdle(device);
 }
 
-void VirtuoxEngine::cleanupSwapChain() {
+void NeutronEngine::cleanupSwapChain() {
 	for (auto framebuffer : swapChainFramebuffers) {
 		vkDestroyFramebuffer(device, framebuffer, nullptr);
 	}
@@ -122,7 +122,7 @@ void VirtuoxEngine::cleanupSwapChain() {
 	vkDestroySwapchainKHR(device, swapChain, nullptr);
 }
 
-void VirtuoxEngine::cleanup() {
+void NeutronEngine::cleanup() {
 	cleanupSwapChain();
 
 	vkDestroyBuffer(device, indexBuffer, nullptr);
@@ -157,7 +157,7 @@ void VirtuoxEngine::cleanup() {
 	glfwTerminate();
 }
 
-void VirtuoxEngine::recreateSwapChain() {
+void NeutronEngine::recreateSwapChain() {
 	int width = 0, height = 0;
 	glfwGetFramebufferSize(window, &width, &height);
 	while (width == 0 || height == 0) {
@@ -177,7 +177,7 @@ void VirtuoxEngine::recreateSwapChain() {
 	createCommandBuffers();
 }
 
-void VirtuoxEngine::createInstance() {
+void NeutronEngine::createInstance() {
 
 	if (enableValidationLayers && !checkValidationLayerSupport()) {
 		throw std::runtime_error("validation layers requested, but not available!");
@@ -219,7 +219,7 @@ void VirtuoxEngine::createInstance() {
 	}
 }
 
-void VirtuoxEngine::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+void NeutronEngine::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
 	createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
@@ -229,7 +229,7 @@ void VirtuoxEngine::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreate
 	createInfo.pfnUserCallback = debugCallback;
 }
 
-void VirtuoxEngine::setupDebugMessenger() {
+void NeutronEngine::setupDebugMessenger() {
 	if constexpr (!enableValidationLayers) return;
 
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
@@ -240,13 +240,13 @@ void VirtuoxEngine::setupDebugMessenger() {
 	}
 }
 
-void VirtuoxEngine::createSurface() {
+void NeutronEngine::createSurface() {
 	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create window surface!");
 	}
 }
 
-void VirtuoxEngine::pickPhysicalDevice() {
+void NeutronEngine::pickPhysicalDevice() {
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -269,7 +269,7 @@ void VirtuoxEngine::pickPhysicalDevice() {
 	}
 }
 
-void VirtuoxEngine::createLogicalDevice() {
+void NeutronEngine::createLogicalDevice() {
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -314,7 +314,7 @@ void VirtuoxEngine::createLogicalDevice() {
 	vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
-void VirtuoxEngine::createSwapChain() {
+void NeutronEngine::createSwapChain() {
 	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
 
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -366,7 +366,7 @@ void VirtuoxEngine::createSwapChain() {
 	swapChainExtent = extent;
 }
 
-void VirtuoxEngine::createImageViews() {
+void NeutronEngine::createImageViews() {
 	swapChainImageViews.resize(swapChainImages.size());
 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
@@ -391,7 +391,7 @@ void VirtuoxEngine::createImageViews() {
 	}
 }
 
-void VirtuoxEngine::createRenderPass() {
+void NeutronEngine::createRenderPass() {
 	VkAttachmentDescription colorAttachment = {};
 	colorAttachment.format = swapChainImageFormat;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -433,11 +433,11 @@ void VirtuoxEngine::createRenderPass() {
 	}
 }
 
-void VirtuoxEngine::createGraphicsPipeline() {
+void NeutronEngine::createGraphicsPipeline() {
 	auto vertShaderCode = readFile(
-		"C:/Users/Rink/source/repos/VirtuoxSoftwareEngine/Core/source/Shaders/vert.spv");
+		"C:/Users/Rink/source/repos/NeutronEngine/Core/source/Shaders/vert.spv");
 	auto fragShaderCode = readFile(
-		"C:/Users/Rink/source/repos/VirtuoxSoftwareEngine/Core/source/Shaders/frag.spv");
+		"C:/Users/Rink/source/repos/NeutronEngine/Core/source/Shaders/frag.spv");
 
 	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
 	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -597,7 +597,7 @@ void VirtuoxEngine::createGraphicsPipeline() {
 	vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
 
-void VirtuoxEngine::createFramebuffers() {
+void NeutronEngine::createFramebuffers() {
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 
 	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
@@ -620,7 +620,7 @@ void VirtuoxEngine::createFramebuffers() {
 	}
 }
 
-void VirtuoxEngine::createCommandPool() {
+void NeutronEngine::createCommandPool() {
 	QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
 
 	VkCommandPoolCreateInfo poolInfo = {};
@@ -633,7 +633,7 @@ void VirtuoxEngine::createCommandPool() {
 	}
 }
 
-void VirtuoxEngine::createVertexBuffer(std::vector<Vertex> vertices) {
+void NeutronEngine::createVertexBuffer(std::vector<Vertex> vertices) {
 	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
 	VkBuffer stagingBuffer;
@@ -655,7 +655,7 @@ void VirtuoxEngine::createVertexBuffer(std::vector<Vertex> vertices) {
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
-void VirtuoxEngine::createIndexBuffer(){
+void NeutronEngine::createIndexBuffer(){
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
 	VkBuffer stagingBuffer;
@@ -678,7 +678,7 @@ void VirtuoxEngine::createIndexBuffer(){
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
-void VirtuoxEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory){
+void NeutronEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory){
 	VkBufferCreateInfo bufferInfo = {};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = size;
@@ -704,7 +704,7 @@ void VirtuoxEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vk
     vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
-void VirtuoxEngine::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size){
+void NeutronEngine::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size){
 	VkCommandBufferAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -737,7 +737,7 @@ void VirtuoxEngine::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceS
 	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
-uint32_t VirtuoxEngine::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+uint32_t NeutronEngine::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
 	VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
@@ -750,7 +750,7 @@ uint32_t VirtuoxEngine::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlag
 	throw std::runtime_error("Failed to find suitable memory type!");
 }
 
-void VirtuoxEngine::createCommandBuffers() {
+void NeutronEngine::createCommandBuffers() {
 	commandBuffers.resize(swapChainFramebuffers.size());
 
 	VkCommandBufferAllocateInfo allocInfo = {};
@@ -803,7 +803,7 @@ void VirtuoxEngine::createCommandBuffers() {
 	}
 }
 
-void VirtuoxEngine::createSyncObjects() {
+void NeutronEngine::createSyncObjects() {
 	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -825,7 +825,7 @@ void VirtuoxEngine::createSyncObjects() {
 	}
 }
 
-void VirtuoxEngine::drawFrame() {
+void NeutronEngine::drawFrame() {
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 	uint32_t imageIndex;
@@ -891,7 +891,7 @@ void VirtuoxEngine::drawFrame() {
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-VkShaderModule VirtuoxEngine::createShaderModule(const std::vector<char>& code) {
+VkShaderModule NeutronEngine::createShaderModule(const std::vector<char>& code) {
 	VkShaderModuleCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	createInfo.codeSize = code.size();
@@ -906,7 +906,7 @@ VkShaderModule VirtuoxEngine::createShaderModule(const std::vector<char>& code) 
 }
 
 ///<summary>Set the format for the Vulkan Surface</summary>
-VkSurfaceFormatKHR VirtuoxEngine::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+VkSurfaceFormatKHR NeutronEngine::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 	for (const auto& availableFormat : availableFormats) {
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace ==
 			VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
@@ -918,7 +918,7 @@ VkSurfaceFormatKHR VirtuoxEngine::chooseSwapSurfaceFormat(const std::vector<VkSu
 }
 
 ///<summary>Choose the present mode that is best suited for the current hardware and software</summary>
-VkPresentModeKHR VirtuoxEngine::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
+VkPresentModeKHR NeutronEngine::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	for (const auto& availablePresentMode : availablePresentModes) {
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
 			return availablePresentMode;
@@ -929,7 +929,7 @@ VkPresentModeKHR VirtuoxEngine::chooseSwapPresentMode(const std::vector<VkPresen
 }
 
 ///<summary>Choose swap extent according to the screen width and height</summary>
-VkExtent2D VirtuoxEngine::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
+VkExtent2D NeutronEngine::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
 	if (capabilities.currentExtent.width != UINT32_MAX) {
 		return capabilities.currentExtent;
 	}
@@ -950,7 +950,7 @@ VkExtent2D VirtuoxEngine::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capab
 }
 
 ///<summary>Set information and data for the quary Swap Chain</summary>
-SwapChainSupportDetails VirtuoxEngine::querySwapChainSupport(VkPhysicalDevice device) {
+SwapChainSupportDetails NeutronEngine::querySwapChainSupport(VkPhysicalDevice device) {
 	SwapChainSupportDetails details;
 
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
@@ -975,7 +975,7 @@ SwapChainSupportDetails VirtuoxEngine::querySwapChainSupport(VkPhysicalDevice de
 }
 
 ///<summary>Check if the hardware and software is compatible with Vulkan</summary>
-bool VirtuoxEngine::isDeviceSuitable(VkPhysicalDevice device) {
+bool NeutronEngine::isDeviceSuitable(VkPhysicalDevice device) {
 	QueueFamilyIndices indices = findQueueFamilies(device);
 
 	bool extensionsSupported = checkDeviceExtensionSupport(device);
@@ -990,7 +990,7 @@ bool VirtuoxEngine::isDeviceSuitable(VkPhysicalDevice device) {
 }
 
 ///<summary>Check if the current hardware suppports Device Extensions</summary>
-bool VirtuoxEngine::checkDeviceExtensionSupport(VkPhysicalDevice device) {
+bool NeutronEngine::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 	uint32_t extensionCount;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -1007,7 +1007,7 @@ bool VirtuoxEngine::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 }
 
 ///<summary>This function will return </summary>
-QueueFamilyIndices VirtuoxEngine::findQueueFamilies(VkPhysicalDevice device) {
+QueueFamilyIndices NeutronEngine::findQueueFamilies(VkPhysicalDevice device) {
 	QueueFamilyIndices indices;
 
 	uint32_t queueFamilyCount = 0;
@@ -1040,7 +1040,7 @@ QueueFamilyIndices VirtuoxEngine::findQueueFamilies(VkPhysicalDevice device) {
 }
 
 ///<summary>Return the Extensions from Vulkan that are required for the Extentions</summary>
-std::vector<const char*> VirtuoxEngine::getRequiredExtensions() {
+std::vector<const char*> NeutronEngine::getRequiredExtensions() {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
 	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -1055,7 +1055,7 @@ std::vector<const char*> VirtuoxEngine::getRequiredExtensions() {
 }
 
 ///<summary>Check if validation layers is supported by the hardware and software that has been installed</summary>
-bool VirtuoxEngine::checkValidationLayerSupport() {
+bool NeutronEngine::checkValidationLayerSupport() {
 	uint32_t layerCount;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -1081,7 +1081,7 @@ bool VirtuoxEngine::checkValidationLayerSupport() {
 }
 
 ///<summary>Read and return a file a the given file path.</summary>
-std::vector<char> VirtuoxEngine::readFile(const std::string& filename) {
+std::vector<char> NeutronEngine::readFile(const std::string& filename) {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
 	// Check if the file can be openen. if not throw a runtime error
@@ -1104,7 +1104,7 @@ std::vector<char> VirtuoxEngine::readFile(const std::string& filename) {
 	return buffer;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL VirtuoxEngine::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+VKAPI_ATTR VkBool32 VKAPI_CALL NeutronEngine::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
 	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 

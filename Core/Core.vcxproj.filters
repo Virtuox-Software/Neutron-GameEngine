@@ -14,19 +14,22 @@
     <ClCompile Include="source\pch.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\VulkanCore\CoreLog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\Client\AppLog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\Game\Scripts\Game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\VulkanCore\Application.cpp">
+    <ClCompile Include="source\Game\GameFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\Game\GameFunctions.cpp">
+    <ClCompile Include="source\Core\Application.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Core\CoreLog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Core\CoreFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -34,28 +37,31 @@
     <ClInclude Include="source\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="source\VulkanCore\Application.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="source\EntryPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="source\VulkanCore\CoreLog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="source\Client\AppLog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="source\VulkanCore\Core.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="source\VulkanCore\EntryPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="source\Game\GameFunctions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="source\Game\Scripts\Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Core\Application.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Core\Core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Core\CoreLog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Core\EntryPoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Core\CoreFunctions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

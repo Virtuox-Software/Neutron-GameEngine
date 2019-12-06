@@ -24,10 +24,11 @@
 #include <optional>
 #include <set>
 
-#include "VulkanCore/CoreLog.h"
+#include "Core/CoreLog.h"
 #include "Game/GameFunctions.h"
 
 #pragma region Simple Functionality
+
 	#if DEBUG_MODE
 	///<summary>Prevent the user from closing the console automaticaly. Press Enter to Exit.</summary>
 	#define DontCloseConsole std::cout << "Press Enter to Exit the program!" << std::endl; std::cin.get();

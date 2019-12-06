@@ -9,9 +9,9 @@
  *
 */
 
-namespace VirtuoxSoftware
+namespace NeutronEngine
 {
-	// Window pixel ratios
+// Window pixel ratios
 const int WIDTH = 1024; // 1280 / 1024
 const int HEIGHT = 576; // 720  / 576
 
@@ -19,8 +19,8 @@ const int HEIGHT = 576; // 720  / 576
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 // information about the Vulkan Application.
-#define vs_ApplicatioName	"Virtuox Game"
-#define vs_EngineName		"Virtuox Software Engine"
+#define vs_ApplicatioName	"Neutron Game"
+#define vs_EngineName		"Virtuox Softwares Neutron Engine"
 
 const std::vector<const char*> validationLayers = {
 	"VK_LAYER_KHRONOS_validation"
@@ -98,7 +98,7 @@ struct Vertex {
 	}
 };
 
-#pragma region VertixArrays
+#pragma region VertexArrays
 // const std::vector<Vertex> vertices;
 
 const std::vector<Vertex> TriangleVert = {
@@ -109,9 +109,9 @@ const std::vector<Vertex> TriangleVert = {
 
 const std::vector<Vertex> SquareVert = {
 {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-{{-0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}}
+	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+	{{0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
+	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 };
 
 const std::vector<uint16_t> indices = {
@@ -120,7 +120,7 @@ const std::vector<uint16_t> indices = {
 
 #pragma endregion
 
-class VirtuoxEngine
+class NeutronEngine
 {
 public:
 	void run();

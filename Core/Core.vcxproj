@@ -44,11 +44,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
-    <TargetName>VirtuoxSoftwareEngine</TargetName>
+    <TargetName>NeutronEngine</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
-    <TargetName>VirtuoxSoftwareEngine</TargetName>
+    <TargetName>NeutronEngine</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -61,7 +61,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PreprocessorDefinitions>DEBUG_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_MODE;%(PreprocessorDefinitions);GetProjectPath="$(ProjectDir)."</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -82,7 +83,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PreprocessorDefinitions>RELEASE_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RELEASE_MODE;%(PreprocessorDefinitions);GetProjectPath="$(ProjectDir)."</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -94,25 +96,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\Client\AppLog.cpp" />
+    <ClCompile Include="source\Core\CoreFunctions.cpp" />
     <ClCompile Include="source\Game\GameFunctions.cpp" />
     <ClCompile Include="source\Game\Scripts\Game.cpp" />
     <ClCompile Include="source\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="source\VulkanCore\Application.cpp" />
-    <ClCompile Include="source\VulkanCore\CoreLog.cpp" />
+    <ClCompile Include="source\Core\Application.cpp" />
+    <ClCompile Include="source\Core\CoreLog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Client\AppLog.h" />
+    <ClInclude Include="source\Core\CoreFunctions.h" />
     <ClInclude Include="source\EntryPoint.h" />
     <ClInclude Include="source\Game\GameFunctions.h" />
     <ClInclude Include="source\Game\Scripts\Game.h" />
     <ClInclude Include="source\pch.h" />
-    <ClInclude Include="source\VulkanCore\Application.h" />
-    <ClInclude Include="source\VulkanCore\Core.h" />
-    <ClInclude Include="source\VulkanCore\CoreLog.h" />
-    <ClInclude Include="source\VulkanCore\EntryPoint.h" />
+    <ClInclude Include="source\Core\Application.h" />
+    <ClInclude Include="source\Core\Core.h" />
+    <ClInclude Include="source\Core\CoreLog.h" />
+    <ClInclude Include="source\Core\EntryPoint.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
