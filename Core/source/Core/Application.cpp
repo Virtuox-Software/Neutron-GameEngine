@@ -1,8 +1,8 @@
 /* TODO and other information
  * 
- * TODO: Descriptor Layout and buffer
+ * TODO: Descriptor Sets
  * 
- * all the code is on page 178 and beyond of the Vulkan Documentation.pdf
+ * all the code is on page 188 and beyond of the Vulkan Documentation.pdf
  * 
  * Information:
  * 
@@ -82,6 +82,8 @@ void NeutronEngine::initVulkan() {
 	createVertexBuffer(SquareVert);
 	createIndexBuffer();
 	createUniformBuffer();
+	createDescriptorPool();
+	createDescriptorSets();
 	createCommandBuffers();
 	// Take image from swap chain and pass it to render the image / frame.
 	createSyncObjects();
@@ -128,6 +130,8 @@ void NeutronEngine::cleanupSwapChain() {
 		vkDestroyBuffer(device, uniformBuffers[i], nullptr);
 		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
 	}
+
+	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 }
 
 void NeutronEngine::cleanup() {
@@ -185,6 +189,8 @@ void NeutronEngine::recreateSwapChain() {
 	createGraphicsPipeline();
 	createFramebuffers();
 	createUniformBuffer();
+	createDescriptorPool();
+	createDescriptorSets();
 	createCommandBuffers();
 }
 
@@ -714,6 +720,22 @@ void NeutronEngine::createUniformBuffer() {
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 			uniformBuffers[i], uniformBuffersMemory[i]);
 	}
+}
+
+void NeutronEngine::createDescriptorPool(){
+	VkDescriptorPoolSize poolSize = {};
+	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	poolSize.descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+
+	VkDescriptorPoolCreateInfo poolInfo = {};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = 1;
+	poolInfo.pPoolSizes = &poolSize;
+	poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
+}
+
+void NeutronEngine::createDescriptorSets() {
+
 }
 
 void NeutronEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory){
