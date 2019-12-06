@@ -6,7 +6,7 @@
  * 
  * Information:
  * 
- * https://github.com/Overv/VulkanTutorial/blob/master/code/19_staging_buffer.cpp
+ * https://github.com/Overv/VulkanTutorial/blob/master/code/21_descriptor_layout.cpp
  * 
  * Extra information:
  * 
@@ -74,12 +74,14 @@ void NeutronEngine::initVulkan() {
 	// Create Image view and render pass to render something on screen
 	createImageViews();
 	createRenderPass();
+	createDescriptorSetLayout();
 	createGraphicsPipeline();
 	createFramebuffers();
 	// Command pool for drawing on the Window.
 	createCommandPool();
 	createVertexBuffer(SquareVert);
 	createIndexBuffer();
+	createUniformBuffer();
 	createCommandBuffers();
 	// Take image from swap chain and pass it to render the image / frame.
 	createSyncObjects();
@@ -124,6 +126,8 @@ void NeutronEngine::cleanupSwapChain() {
 
 void NeutronEngine::cleanup() {
 	cleanupSwapChain();
+
+	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
 	vkDestroyBuffer(device, indexBuffer, nullptr);
 	vkFreeMemory(device, indexBufferMemory, nullptr);
@@ -174,6 +178,7 @@ void NeutronEngine::recreateSwapChain() {
 	createRenderPass();
 	createGraphicsPipeline();
 	createFramebuffers();
+	createUniformBuffer();
 	createCommandBuffers();
 }
 
@@ -433,6 +438,25 @@ void NeutronEngine::createRenderPass() {
 	}
 }
 
+void NeutronEngine::createDescriptorSetLayout() {
+	VkDescriptorSetLayoutBinding uboLayoutBinding = {};
+	uboLayoutBinding.binding = 0;
+	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uboLayoutBinding.descriptorCount = 1;
+
+	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	uboLayoutBinding.pImmutableSamplers = nullptr;
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings = &uboLayoutBinding;
+
+	if(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create descriptor set layout!");
+	}
+}
+
 void NeutronEngine::createGraphicsPipeline() {
 	auto vertShaderCode = readFile(
 		"C:/Users/Rink/source/repos/NeutronEngine/Core/source/Shaders/vert.spv");
@@ -560,15 +584,9 @@ void NeutronEngine::createGraphicsPipeline() {
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	/*
-	// Optional
-	pipelineLayoutInfo.setLayoutCount = 0;
-	pipelineLayoutInfo.pSetLayout = nullptr;
-	pipelineLayoutInfo.pushConstantRangeCount = 0;
-
-	pipelineLayoutInfo.pPushConstantRanges = nullptr;
-	*/
-
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+	
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create pipeline layout!");
 	}
@@ -676,6 +694,20 @@ void NeutronEngine::createIndexBuffer(){
 
 	vkDestroyBuffer(device, stagingBuffer, nullptr);
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
+}
+
+void NeutronEngine::createUniformBuffer() {
+	VkDeviceSize bufferSize = sizeof(uniformBuffersMemory);
+
+	uniformBuffers.resize(swapChainImages.size());
+	uniformBuffersMemory.resize(swapChainImages.size());
+
+	for (size_t i = 0; i < swapChainImages.size(); i++)
+	{
+		createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			uniformBuffers[i], uniformBuffersMemory[i]);
+	}
 }
 
 void NeutronEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory){

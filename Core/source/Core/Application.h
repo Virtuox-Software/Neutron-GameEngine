@@ -98,6 +98,12 @@ struct Vertex {
 	}
 };
 
+struct UniformBuferObject {
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 proj;
+};
+
 #pragma region VertexArrays
 // const std::vector<Vertex> vertices;
 
@@ -145,6 +151,7 @@ private:
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
 	VkRenderPass renderPass;
+	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
 
@@ -154,6 +161,9 @@ private:
 	VkDeviceMemory vertexBufferMemory;
 	VkBuffer indexBuffer;
 	VkDeviceMemory indexBufferMemory;
+
+	std::vector<VkBuffer> uniformBuffers;
+	std::vector<VkDeviceMemory> uniformBuffersMemory;
 
 	std::vector<VkCommandBuffer> commandBuffers;
 
@@ -204,6 +214,8 @@ private:
 
 	void createRenderPass();
 
+	void createDescriptorSetLayout();
+
 	void createGraphicsPipeline();
 
 	void createFramebuffers();
@@ -213,6 +225,8 @@ private:
 	void createVertexBuffer(std::vector<Vertex> vertices);
 
 	void createIndexBuffer();
+
+	void createUniformBuffer();
 
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
