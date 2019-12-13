@@ -99,9 +99,9 @@ struct Vertex {
 };
 
 struct UniformBufferObject {
-	glm::mat4 model;
-	glm::mat4 view;
-	glm::mat4 proj;
+	alignas(16) glm::mat4 model;
+	alignas(16) glm::mat4 view;
+	alignas(16) glm::mat4 proj;
 };
 
 #pragma region VertexArrays
@@ -166,7 +166,7 @@ private:
 	std::vector<VkDeviceMemory> uniformBuffersMemory;
 
 	VkDescriptorPool descriptorPool;
-	std::vector<VkDescriptorSet> descriptorSet;
+	std::vector<VkDescriptorSet> descriptorSets;
 
 	std::vector<VkCommandBuffer> commandBuffers;
 
