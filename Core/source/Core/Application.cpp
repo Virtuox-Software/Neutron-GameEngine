@@ -2,7 +2,7 @@
  * 
  * TODO: Descriptor Sets
  * 
- * all the code is on page 194 and beyond of the Vulkan Documentation.pdf
+ * all the code is on page 214 and beyond of the Vulkan Documentation.pdf
  * 
  * Information:
  * 
@@ -10,7 +10,7 @@
  * 
  * Extra information:
  * 
- * ...
+ * CreateImageTextureView()
 */
 #include "pch.h"
 #include "Application.h"
