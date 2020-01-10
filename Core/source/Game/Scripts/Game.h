@@ -8,5 +8,8 @@ public:
 private:
 
 public:
-	void ExecGame();
+	void Awake();
+	void Start();
+	void Update();
+	void LateUpdate();
 };

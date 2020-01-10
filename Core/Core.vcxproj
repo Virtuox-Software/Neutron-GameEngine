@@ -61,7 +61,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PreprocessorDefinitions>DEBUG_MODE;%(PreprocessorDefinitions);GetProjectPath="$(ProjectDir)."</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_MODE;%(PreprocessorDefinitions);GetProjectPath=R"($(ProjectDir))";GetAssetPath=R"($(SolutionDir)Assets/)"</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -83,7 +83,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PreprocessorDefinitions>RELEASE_MODE;%(PreprocessorDefinitions);GetProjectPath="$(ProjectDir)."</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RELEASE_MODE;%(PreprocessorDefinitions);GetProjectPath=R"($(ProjectDir))";GetAssetPath=R"($(SolutionDir)Assets/)"</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
