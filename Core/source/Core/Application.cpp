@@ -2,7 +2,7 @@
  * 
  * TODO: Descriptor Sets
  * 
- * all the code is on page 242 and beyond of the Vulkan Documentation.pdf
+ * all the code is on page 246 and beyond of the Vulkan Documentation.pdf
  * 
  * Information:
  * 
@@ -10,7 +10,7 @@
  * 
  * Extra information:
  * 
- * 
+ * loadModel()
 */
 #include "pch.h"
 #include "Application.h"
@@ -87,6 +87,7 @@ void NeutronEngine::initVulkan() {
 	createTextureImage();
 	createTextureImageView();
 	createTextureSampler();
+	loadModel();
 	createVertexBuffer(vertices);
 	createIndexBuffer();
 	createUniformBuffers();
@@ -687,7 +688,7 @@ bool NeutronEngine::hasStencilComponent(VkFormat format){
 
 void NeutronEngine::createTextureImage(){
 	int texWidth, texHeight, texChannels;
-	stbi_uc* pixels = stbi_load(GetAssetPath"Images/Banaan.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 	VkDeviceSize imageSize = texWidth * texHeight * 4;
 
 	if (!pixels) {
@@ -873,6 +874,10 @@ void NeutronEngine::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t w
 	vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
 	endSingleTimeCommands(commandBuffer);
+}
+
+void NeutronEngine::loadModel(){
+	// TODO page 246
 }
 
 void NeutronEngine::createVertexBuffer(std::vector<Vertex> vertices) {

@@ -20,12 +20,18 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
 #pragma endregion
 
 namespace NeutronEngine {
 // Window pixel ratios
 const int WIDTH = 1024; // 1280 / 1024
 const int HEIGHT = 576; // 720  / 576
+
+const std::string MODEL_PATH = GetAssetPath"Models/TestModel.obj";
+const std::string TEXTURE_PATH = GetAssetPath"Models/TestTexture.png";
 
 // Max amount of frames that are allowed in flight for rendering.
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -285,6 +291,8 @@ private:
 	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+	void loadModel();
 
 	void createVertexBuffer(std::vector<Vertex> vertices);
 
