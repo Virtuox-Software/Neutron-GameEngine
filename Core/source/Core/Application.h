@@ -17,6 +17,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -25,13 +28,13 @@
 
 #pragma endregion
 
-namespace NeutronEngine {
+namespace VirtuoxSoftware {
 // Window pixel ratios
 const int WIDTH = 1024; // 1280 / 1024
 const int HEIGHT = 576; // 720  / 576
 
-const std::string MODEL_PATH = GetAssetPath"Models/TestModel.obj";
-const std::string TEXTURE_PATH = GetAssetPath"Models/TestTexture.png";
+const std::string MODEL_PATH = GetAssetPath"Models/chalet.obj";
+const std::string TEXTURE_PATH = GetAssetPath"Models/chalet.jpg";
 
 // Max amount of frames that are allowed in flight for rendering.
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -120,6 +123,10 @@ struct Vertex {
 
 		return attributeDescriptions;
 	}
+
+	bool operator==(const Vertex& other) const {
+		return pos == other.pos && color == other.color && texCoord == other.texCoord;
+	}
 };
 
 struct UniformBufferObject {
@@ -169,16 +176,20 @@ public:
 private:
 	GLFWwindow* window;
 
+	// Vulkan instances
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
 	VkSurfaceKHR surface;
 
+	// Devices
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 	VkDevice device;
 
+	// Queue's
 	VkQueue graphicsQueue;
 	VkQueue presentQueue;
 
+	// Swapchain
 	VkSwapchainKHR swapChain;
 	std::vector<VkImage> swapChainImages;
 	VkFormat swapChainImageFormat;
@@ -186,6 +197,7 @@ private:
 	std::vector<VkImageView> swapChainImageViews;
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
+	// Renderpass and Render Pipeline
 	VkRenderPass renderPass;
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout;
@@ -193,15 +205,20 @@ private:
 
 	VkCommandPool commandPool;
 
+	// Textures
 	VkImage textureImage;
 	VkDeviceMemory textureImageMemory;
 	VkImageView textureImageView;
 	VkSampler textureSampler;
 
+	// Depth mapping
 	VkImage depthImage;
 	VkDeviceMemory depthImageMemory;
 	VkImageView depthImageView;
 
+	// vertex buffers
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;
 	VkBuffer indexBuffer;
@@ -215,6 +232,7 @@ private:
 
 	std::vector<VkCommandBuffer> commandBuffers;
 
+	// Semaphores and Framebuffering
 	std::vector<VkSemaphore> imageAvailableSemaphores;
 	std::vector<VkSemaphore> renderFinishedSemaphores;
 	std::vector<VkFence> inFlightFences;
@@ -223,10 +241,25 @@ private:
 
 	bool framebufferResized = false;
 
-#pragma region VS_EngineFunctions
+	// FPS and runtime
+	std::chrono::time_point<std::chrono::steady_clock> frameTime_StartTime;
+	//std::chrono::time_point<std::chrono::steady_clock> frameTime_EndTime;
+	// get FPS counter
+	std::chrono::time_point<std::chrono::steady_clock> fpsCount_second;
+	uint16_t frameCount = 0;
+
+
+#pragma region VirtuoxSoftware_EngineFunctions
 	
 	// Game instance
 	GameFunctions game;
+
+	// FPS counter
+	void fpsStart();
+
+	void fpsEnd();
+
+	//Vulkan functions
 
 	void initWindow();
 

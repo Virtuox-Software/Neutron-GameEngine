@@ -1,8 +1,14 @@
 /* TODO and other information
  * 
- * TODO: Descriptor Sets
+ * Personal goals
  * 
- * all the code is on page 246 and beyond of the Vulkan Documentation.pdf
+ * FPS Controller/ Camera controller
+ * 
+ * --------------------------------------------------------------------
+ * 
+ * TODO: Generating Mipmaps
+ * 
+ * all the code is on page 253 and beyond of the Vulkan Documentation.pdf
  * 
  * Information:
  * 
@@ -10,14 +16,14 @@
  * 
  * Extra information:
  * 
- * loadModel()
+ * 
 */
 #include "pch.h"
 #include "Application.h"
 
 // Main function, Start of the program.
 int main() {
-	NeutronEngine::NeutronEngine EngineApplication;
+	VirtuoxSoftware::NeutronEngine EngineApplication;
 	try {
 		EngineApplication.run();
 	} catch (const std::exception& e) {
@@ -33,7 +39,15 @@ int main() {
 	// Return SUCCES if the program can run.
 	return EXIT_SUCCESS;
 }
-namespace NeutronEngine
+namespace std{
+	template<> struct hash<VirtuoxSoftware::Vertex> {
+		size_t operator()(VirtuoxSoftware::Vertex const& vertex) const {
+			return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1);
+		}
+	};
+}
+
+namespace VirtuoxSoftware
 {
 #pragma region MainApplication Functions
 
@@ -104,9 +118,43 @@ void NeutronEngine::initGame() {
 	game.Init();
 }
 
+// Fps count
+void NeutronEngine::fpsStart(){
+	//
+	frameTime_StartTime = std::chrono::high_resolution_clock::now();
+	if(frameCount == 0){
+		// Set second start time
+		fpsCount_second = frameTime_StartTime;
+	}
+}
+void NeutronEngine::fpsEnd(){
+	frameCount++;
+
+	float time = std::chrono::duration<float, std::chrono::seconds::period>
+		(std::chrono::high_resolution_clock::now() - frameTime_StartTime).count();
+
+	//Clear console
+	if(std::chrono::duration<float, std::chrono::seconds::period>
+		(std::chrono::high_resolution_clock::now() - fpsCount_second).count() >= 1) {
+
+		// Show frame time
+		std::cout << "Frame Time: " << time << " Seconds" <<std::endl;
+
+		// Display FPS
+		std::cout << "FPS: " << frameCount << std::endl;
+		frameCount = 0;
+	}
+
+	// 
+	time = NULL;
+}
+
 void NeutronEngine::mainLoop() {
 	//void gameFunctionExec = GameFunction;
 	while (!glfwWindowShouldClose(window)) {
+		// set value
+		NeutronEngine::fpsStart();
+
 		glfwPollEvents();
 
 		// Game Update Function
@@ -115,6 +163,9 @@ void NeutronEngine::mainLoop() {
 
 		// Do the Draw a Frame after
 		drawFrame();
+
+		// Calculate frame time and FPS.
+		NeutronEngine::fpsEnd();
 	}
 
 	vkDeviceWaitIdle(device);
@@ -692,7 +743,7 @@ void NeutronEngine::createTextureImage(){
 	VkDeviceSize imageSize = texWidth * texHeight * 4;
 
 	if (!pixels) {
-		throw std::runtime_error("failed to load texture image!");
+		throw std::runtime_error("Failed to load texture image!");
 	}
 
 	VkBuffer stagingBuffer;
@@ -786,7 +837,7 @@ void NeutronEngine::createImage(uint32_t width, uint32_t height, VkFormat format
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	if (vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create image!");
+		throw std::runtime_error("Failed to create image!");
 	}
 
 	VkMemoryRequirements memRequirements;
@@ -798,7 +849,7 @@ void NeutronEngine::createImage(uint32_t width, uint32_t height, VkFormat format
 	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
 	if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate image memory!");
+		throw std::runtime_error("Failed to allocate image memory!");
 	}
 
 	vkBindImageMemory(device, image, imageMemory, 0);
@@ -838,7 +889,7 @@ void NeutronEngine::transitionImageLayout(VkImage image, VkFormat format, VkImag
 		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
 	else {
-		throw std::invalid_argument("unsupported layout transition!");
+		throw std::invalid_argument("Unsupported layout transition!");
 	}
 
 	vkCmdPipelineBarrier(
@@ -877,7 +928,42 @@ void NeutronEngine::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t w
 }
 
 void NeutronEngine::loadModel(){
-	// TODO page 246
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string warn, err;
+
+	if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str())){
+		throw std::runtime_error(warn + err);
+	}
+
+	std::unordered_map<Vertex, uint32_t> uniqueVertices = {};
+
+	for(const auto& shape : shapes){
+		for(const auto& index : shape.mesh.indices){
+			Vertex vertex = {};
+
+			vertex.pos = {
+				attrib.vertices[3 * index.vertex_index + 0],
+				attrib.vertices[3 * index.vertex_index + 1],
+				attrib.vertices[3 * index.vertex_index + 2]
+			};
+
+			vertex.texCoord = {
+				attrib.texcoords[2 * index.texcoord_index + 0],
+				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+			};
+
+			vertex.color = { 1.0f, 1.0f, 1.0f };
+
+			if (uniqueVertices.count(vertex) == 0){
+				uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+				vertices.push_back(vertex);
+			}
+
+			indices.push_back(uniqueVertices[vertex]);
+		}
+	}
 }
 
 void NeutronEngine::createVertexBuffer(std::vector<Vertex> vertices) {
@@ -1119,7 +1205,7 @@ void NeutronEngine::createCommandBuffers() {
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 
-		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
 		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
 

@@ -5,7 +5,7 @@
 
 #define GETSTRING(x) STRINGIFY(x)
 
-namespace NeutronEngine
+namespace VirtuoxSoftware
 {
 	NeutronCore::NeutronCore() { }
 	NeutronCore::~NeutronCore() { }

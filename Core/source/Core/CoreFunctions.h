@@ -1,6 +1,6 @@
 #pragma once
 
-namespace NeutronEngine
+namespace VirtuoxSoftware
 {
 	class NeutronCore
 	{

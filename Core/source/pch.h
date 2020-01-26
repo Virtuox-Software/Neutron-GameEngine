@@ -12,6 +12,7 @@
 #include <array>
 #include <optional>
 #include <set>
+#include <unordered_map>
 
 //#include "CoreFunctions.h"
 #include "Game/GameFunctions.h"
