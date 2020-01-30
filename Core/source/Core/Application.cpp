@@ -16,7 +16,6 @@
  * 
  * Extra information:
  * 
- * 
 */
 #include "pch.h"
 #include "Application.h"
