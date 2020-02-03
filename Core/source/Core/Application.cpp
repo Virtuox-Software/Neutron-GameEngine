@@ -132,16 +132,20 @@ void NeutronEngine::fpsEnd(){
 	float time = std::chrono::duration<float, std::chrono::seconds::period>
 		(std::chrono::high_resolution_clock::now() - frameTime_StartTime).count();
 
+	//std::cout << time << std::endl;
+	totalFrameTime += time;
+
 	//Clear console
-	if(std::chrono::duration<float, std::chrono::seconds::period>
+	if (std::chrono::duration<float, std::chrono::seconds::period>
 		(std::chrono::high_resolution_clock::now() - fpsCount_second).count() >= 1) {
 
 		// Show frame time
-		std::cout << "Frame Time: " << time << " Seconds" <<std::endl;
+		std::cout << "Average Frame Time: " << (totalFrameTime / frameCount) << " Seconds" <<std::endl;
 
 		// Display FPS
 		std::cout << "FPS: " << frameCount << std::endl;
 		frameCount = 0;
+		totalFrameTime = 0;
 	}
 
 	// 

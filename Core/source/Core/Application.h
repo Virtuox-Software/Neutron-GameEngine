@@ -243,6 +243,7 @@ private:
 
 	// FPS and runtime
 	std::chrono::time_point<std::chrono::steady_clock> frameTime_StartTime;
+	float totalFrameTime = 0.0f;
 	//std::chrono::time_point<std::chrono::steady_clock> frameTime_EndTime;
 	// get FPS counter
 	std::chrono::time_point<std::chrono::steady_clock> fpsCount_second;
