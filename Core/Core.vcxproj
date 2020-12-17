@@ -56,12 +56,12 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core\vendor\spdlog\include;$(SolutionDir)Core\source;$(SolutionDir)Core\vendor\glm;$(SolutionDir)Core\vendor\glfw-3.3.bin.WIN64\include;C:\VulkanSDK\1.1.121.2\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core\source;C:\VulkanSDK\1.1.121.2\Include;$(SolutionDir)Core\vendor\glm\include;$(SolutionDir)Core\vendor\glfw-3.3.bin.WIN64\include;$(SolutionDir)Core\vendor\spdlog\include;$(SolutionDir)Core\vendor\stb;$(SolutionDir)Core\vendor\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PreprocessorDefinitions>DEBUG_MODE;%(PreprocessorDefinitions);GetProjectPath="$(ProjectDir)."</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_MODE;%(PreprocessorDefinitions);GetProjectPath=R"($(ProjectDir))";GetAssetPath=R"($(SolutionDir)Assets/)"</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -78,12 +78,12 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Core\vendor\spdlog\include;$(SolutionDir)Core\source;$(SolutionDir)Core\vendor\glm;$(SolutionDir)Core\vendor\glfw-3.3.bin.WIN64\include;C:\VulkanSDK\1.1.121.2\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Core\source;C:\VulkanSDK\1.1.121.2\Include;$(SolutionDir)Core\vendor\glm\include;$(SolutionDir)Core\vendor\glfw-3.3.bin.WIN64\include;$(SolutionDir)Core\vendor\spdlog\include;$(SolutionDir)Core\vendor\stb;$(SolutionDir)Core\vendor\tinyobjloader;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <PreprocessorDefinitions>RELEASE_MODE;%(PreprocessorDefinitions);GetProjectPath="$(ProjectDir)."</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RELEASE_MODE;%(PreprocessorDefinitions);GetProjectPath=R"($(ProjectDir))";GetAssetPath=R"($(SolutionDir)Assets/)"</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>

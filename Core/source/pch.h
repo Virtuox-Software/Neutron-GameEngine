@@ -1,16 +1,5 @@
 #pragma once
-
 // Include Directories and Libraries
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#include <vulkan/vulkan.h>
-
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -23,9 +12,12 @@
 #include <array>
 #include <optional>
 #include <set>
+#include <unordered_map>
 
-#include "Core/CoreLog.h"
+//#include "CoreFunctions.h"
 #include "Game/GameFunctions.h"
+
+#pragma message("ProjectPath == " GetProjectPath) // will print project dir during compilation
 
 #pragma region Simple Functionality
 
