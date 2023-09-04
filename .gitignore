@@ -359,4 +359,5 @@ MigrationBackup/
 # Core/source/Client/ADD SCRIPTS WITH CODE THAT THE CLIENT NEEDS OR IS ALLOWED TO ACCESS
 
 # IDK
-/Assets/
+!Assets/*.*
+!Assets/Models/*.*
