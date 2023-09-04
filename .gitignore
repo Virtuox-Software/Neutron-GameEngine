@@ -5,6 +5,8 @@
 # Prerequisites
 *.d
 
+!Assets\
+
 # Compiled Object files
 *.slo
 *.lo
