@@ -33,8 +33,8 @@ namespace VirtuoxSoftware {
 const int WIDTH = 1024; // 1280 / 1024
 const int HEIGHT = 576; // 720  / 576
 
-const std::string MODEL_PATH = GetAssetPath"Models/chalet.obj";
-const std::string TEXTURE_PATH = GetAssetPath"Models/chalet.jpg";
+const std::string MODEL_PATH = GetAssetPath"Models/viking_room.obj";
+const std::string TEXTURE_PATH = GetAssetPath"Models/viking_room.png";
 
 // Max amount of frames that are allowed in flight for rendering.
 const int MAX_FRAMES_IN_FLIGHT = 2;
